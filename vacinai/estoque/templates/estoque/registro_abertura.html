@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.id %}Atualizar Registro de Abertura{% else %}Registrar Abertura de Frasco{% endif %} - Vacinaí
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">{% if form.instance.id %}Atualizar Registro de Abertura{% else %}Registrar Abertura de Frasco{% endif %}</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if not form.instance.id %}
+                        <div class="row">
+                            <div class="col-md-12">
+                                {{ form.estoque|as_crispy_field }}
+                            </div>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <h5>Informações do Frasco</h5>
+                            <p><strong>Vacina:</strong> {{ form.instance.estoque.lote.tipo_imunobiologico.nome }}</p>
+                            <p><strong>Lote:</strong> {{ form.instance.estoque.lote.numero_lote }}</p>
+                            <p><strong>Data de Abertura:</strong> {{ form.instance.data_hora_abertura|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Válido até:</strong> {{ form.instance.horario_validade|date:"d/m/Y H:i" }}</p>
+                            <p><strong>Doses por frasco:</strong> {{ form.instance.estoque.lote.tipo_imunobiologico.doses_por_frasco }}</p>
+                        </div>
+                        {% endif %}
+                        
+                        <div class="row">
+                            {% if not form.instance.id %}
+                            <div class="col-md-12">
+                                {{ form.data_hora_abertura|as_crispy_field }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.doses_utilizadas|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.doses_perdidas|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        {% if form.instance.id %}
+                        <div class="alert alert-{% if form.instance.esta_na_validade %}success{% else %}danger{% endif %} mt-3">
+                            {% if form.instance.esta_na_validade %}
+                                <strong>Frasco válido.</strong> Ainda restam {{ form.instance.doses_restantes }} doses disponíveis.
+                            {% else %}
+                                <strong>Frasco vencido.</strong> Este frasco já passou da validade e deve ser descartado.
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                            <a href="{% if form.instance.id %}{% url 'listar_aberturas' %}{% else %}{% url 'dashboard' %}{% endif %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

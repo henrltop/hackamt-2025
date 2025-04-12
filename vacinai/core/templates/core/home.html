@@ -1,0 +1,81 @@
+<!-- templates/core/home.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="jumbotron bg-light p-5 rounded-3 mb-4">
+    <h1 class="display-4">Vacinaí</h1>
+    <p class="lead">Sistema inteligente de gestão e acesso a imunobiológicos.</p>
+    <hr class="my-4">
+    <p>Encontre facilmente onde tomar suas vacinas e monitore disponibilidade em tempo real.</p>
+    <a class="btn btn-primary btn-lg" href="{% url 'mapa' %}">Ver mapa de vacinas</a>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-primary text-white">
+                <h5 class="card-title mb-0">Para cidadãos</h5>
+            </div>
+            <div class="card-body">
+                <ul class="fa-ul">
+                    <li><span class="fa-li"><i class="fas fa-map-marker-alt text-primary"></i></span>Encontre unidades com vacinas disponíveis</li>
+                    <li><span class="fa-li"><i class="fas fa-bell text-primary"></i></span>Receba notificações sobre novas vacinas</li>
+                    <li><span class="fa-li"><i class="fas fa-history text-primary"></i></span>Acompanhe seu histórico de imunização</li>
+                    <li><span class="fa-li"><i class="fas fa-filter text-primary"></i></span>Filtre por tipo de vacina e faixa etária</li>
+                </ul>
+                {% if not user.is_authenticated %}
+                <a href="{% url 'cadastro' %}" class="btn btn-outline-primary">Cadastre-se</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card h-100">
+            <div class="card-header bg-success text-white">
+                <h5 class="card-title mb-0">Para gestores</h5>
+            </div>
+            <div class="card-body">
+                <ul class="fa-ul">
+                    <li><span class="fa-li"><i class="fas fa-chart-line text-success"></i></span>Dashboard com informações em tempo real</li>
+                    <li><span class="fa-li"><i class="fas fa-exclamation-triangle text-success"></i></span>Alertas de vencimento de lotes</li>
+                    <li><span class="fa-li"><i class="fas fa-boxes text-success"></i></span>Controle eficiente de estoque</li>
+                    <li><span class="fa-li"><i class="fas fa-file-alt text-success"></i></span>Relatórios personalizados</li>
+                </ul>
+                {% if user.is_authenticated and user.perfilusuario.tipo != 'CIDADAO' %}
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-success">Acessar Dashboard</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <h2 class="mb-4">Vacinas disponíveis</h2>
+    </div>
+    {% for tipo in tipos_imuno %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-body">
+                <h5 class="card-title">{{ tipo.nome }}</h5>
+                <p class="card-text">{{ tipo.descricao|default:"" }}</p>
+                <p class="card-text">
+                    <small class="text-muted">
+                        Público-alvo: {{ tipo.get_publico_alvo_display }}
+                    </small>
+                </p>
+            </div>
+            <div class="card-footer">
+                <a href="{% url 'mapa' %}?vacina={{ tipo.id }}" class="btn btn-sm btn-outline-primary">Encontrar onde tomar</a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            Nenhum tipo de imunobiológico cadastrado.
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}

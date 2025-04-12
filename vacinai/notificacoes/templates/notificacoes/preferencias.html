@@ -1,0 +1,91 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Preferências de Notificação - Vacinaí{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Preferências de Notificação</h1>
+    
+    <div class="card mb-4">
+        <div class="card-header bg-info text-white">
+            <h5 class="card-title mb-0">Configure suas preferências</h5>
+        </div>
+        <div class="card-body">
+            <p>Selecione quais vacinas você deseja receber notificações quando estiverem disponíveis.</p>
+            
+            <form method="post" id="form-preferencias">
+                {% csrf_token %}
+                
+                <div class="table-responsive">
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th>Vacina</th>
+                                <th>Fabricante</th>
+                                <th>Município</th>
+                                <th>Email</th>
+                                <th>App</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for form in forms %}
+                            <tr>
+                                <td>{{ form.instance.tipo_imunobiologico.nome }}</td>
+                                <td>{{ form.instance.tipo_imunobiologico.fabricante }}</td>
+                                <td>{{ form.instance.municipio.nome }}/{{ form.instance.municipio.uf }}</td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        {{ form.notificar_email }}
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="form-check form-switch">
+                                        {{ form.notificar_app }}
+                                    </div>
+                                </td>
+                                {{ form.id }}
+                                {{ form.usuario }}
+                                {{ form.tipo_imunobiologico }}
+                                {{ form.municipio }}
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">
+                                    <span class="text-muted">Nenhuma preferência encontrada. Adicione uma nova abaixo.</span>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                
+                <button type="submit" class="btn btn-primary mt-3">Salvar Preferências</button>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header bg-success text-white">
+            <h5 class="card-title mb-0">Adicionar nova preferência</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'adicionar_preferencia' %}">
+                {% csrf_token %}
+                
+                <div class="row">
+                    <div class="col-md-4">
+                        {{ form_new.tipo_imunobiologico|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4">
+                        {{ form_new.municipio|as_crispy_field }}
+                    </div>
+                    <div class="col-md-4 d-flex align-items-end">
+                        <button type="submit" class="btn btn-success w-100">Adicionar</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

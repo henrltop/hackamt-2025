@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Meu Perfil - Vacinaí{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h1 class="mb-4">Meu Perfil</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Informações Pessoais</h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ u_form.username|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ u_form.email|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ u_form.first_name|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ u_form.last_name|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ p_form.cpf|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ p_form.data_nascimento|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ p_form.telefone|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ p_form.municipio|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="d-grid gap-2 mt-3">
+                            <button type="submit" class="btn btn-primary">Atualizar Perfil</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            {% if user.perfilusuario.tipo == 'CIDADAO' %}
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Preferências de Notificação</h5>
+                </div>
+                <div class="card-body">
+                    <p>Configure quais tipos de vacinas você deseja receber notificações quando disponíveis.</p>
+                    <a href="{% url 'preferencias_notificacao' %}" class="btn btn-info">Configurar Preferências</a>
+                </div>
+            </div>
+            {% endif %}
+            
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Segurança</h5>
+                </div>
+                <div class="card-body">
+                    <p>Para alterar sua senha, clique no botão abaixo.</p>
+                    <a href="{% url 'alterar_senha' %}" class="btn btn-danger">Alterar Senha</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

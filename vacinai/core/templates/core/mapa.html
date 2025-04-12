@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+  #map { height: 600px; }
+  .info-box {
+    padding: 15px;
+    background: rgba(255,255,255,0.9);
+    border-radius: 5px;
+    box-shadow: 0 0 15px rgba(0,0,0,0.2);
+  }
+  .card-header-sm {
+    padding: 0.5rem 1rem;
+  }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+  <h2>Mapa de Vacinas Disponíveis</h2>
+  
+  <div class="row mb-3">
+    <div class="col-md-4">
+      <div class="form-group">
+        <label for="filtro-vacina">Filtrar por vacina:</label>
+        <select id="filtro-vacina" class="form-select">
+          <option value="">Todas as vacinas</option>
+          {% for tipo in tipos_imuno %}
+            <option value="{{ tipo.id }}" {% if request.GET.vacina == tipo.id|stringformat:"i" %}selected{% endif %}>
+              {{ tipo.nome }}
+            </option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="col-md-4">
+      <div class="form-group">
+        <label for="filtro-municipio">Filtrar por município:</label>
+        <select id="filtro-municipio" class="form-select">
+          <option value="">Todos os municípios</option>
+          {% for municipio in municipios %}
+            <option value="{{ municipio.id }}">{{ municipio.nome }}/{{ municipio.uf }}</option>
+          {% endfor %}
+        </select>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-end">
+      <button id="btn-filtrar" class="btn btn-primary">Filtrar</button>
+      <button id="btn-usar-localizacao" class="btn btn-outline-secondary ms-2">
+        <i class="fas fa-map-marker-alt"></i> Usar minha localização
+      </button>
+    </div>
+  </div>
+  
+  <div class="row">
+    <div class="col-md-9">
+      <div id="map"></div>
+    </div>
+    <div class="col-md-3">
+      <div class="card mb-3">
+        <div class="card-header card-header-sm bg-primary text-white">
+          <h5 class="card-title mb-0">Legenda</h5>
+        </div>
+        <div class="card-body">
+          <div class="d-flex align-items-center mb-2">
+            <div style="width: 20px; height: 20px; background-color: #28a745; border-radius: 50%; margin-right: 10px;"></div>
+            <span>Muitas doses disponíveis</span>
+          </div>
+          <div class="d-flex align-items-center mb-2">
+            <div style="width: 20px; height: 20px; background-color: #ffc107; border-radius: 50%; margin-right: 10px;"></div>
+            <span>Poucas doses disponíveis</span>
+          </div>
+          <div class="d-flex align-items-center">
+            <div style="width: 20px; height: 20px; background-color: #dc3545; border-radius: 50%; margin-right: 10px;"></div>
+            <span>Sem doses disponíveis</span>
+          </div>
+        </div>
+      </div>
+      
+      <div class="card">
+        <div class="card-header card-header-sm bg-info text-white">
+          <h5 class="card-title mb-0">Unidades próximas</h5>
+        </div>
+        <div class="card-body p-0">
+          <ul id="lista-unidades" class="list-group list-group-flush">
+            <li class="list-group-item text-center p-3">
+              <small class="text-muted">Selecione "Usar minha localização" para ver unidades próximas</small>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    // Inicializar o mapa
+    var map = L.map('map').setView([-15.601, -56.097], 12); // Cuiabá como exemplo
+    
+    // Adicionar camada base
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+    }).addTo(map);
+    
+    // Dados das unidades
+    const unidades = [
+      {% for unidade in unidades %}
+        {
+          id: {{ unidade.id }},
+          nome: "{{ unidade.nome }}",
+          endereco: "{{ unidade.endereco }}, {{ unidade.bairro }}",
+          municipio: "{{ unidade.municipio.nome }}/{{ unidade.municipio.uf }}",
+          telefone: "{{ unidade.telefone|default:'Não informado' }}",
+          horario: "{{ unidade.horario_funcionamento|default:'Não informado'|linebreaksbr }}",
+          lat: {{ unidade.latitude|default:"null" }},
+          lng: {{ unidade.longitude|default:"null" }},
+          vacinas: [
+            {% for estoque in unidade.estoqueimunobiologico_set.all %}
+              {
+                id: {{ estoque.lote.tipo_imunobiologico.id }},
+                nome: "{{ estoque.lote.tipo_imunobiologico.nome }}",
+                doses: {{ estoque.total_doses_disponiveis|default:0 }}
+              },
+            {% endfor %}
+          ]
+        },
+      {% endfor %}
+    ];
+    
+    // Adicionar marcadores ao mapa
+    const marcadores = {};
+    
+    unidades.forEach(function(unidade) {
+      if (unidade.lat && unidade.lng) {
+        // Definir a cor do marcador com base na disponibilidade
+        let corMarcador = "#dc3545"; // vermelho (sem vacinas)
+        if (unidade.vacinas.length > 0) {
+          const totalDoses = unidade.vacinas.reduce((sum, v) => sum + v.doses, 0);
+          if (totalDoses > 50) {
+            corMarcador = "#28a745"; // verde (muitas doses)
+          } else if (totalDoses > 0) {
+            corMarcador = "#ffc107"; // amarelo (poucas doses)
+          }
+        }
+        
+        // Criar ícone customizado
+        const marcadorIcon = L.divIcon({
+          className: 'marcador-unidade',
+          html: `<div style="background-color: ${corMarcador}; width: 20px; height: 20px; border-radius: 50%; border: 2px solid white;"></div>`,
+          iconSize: [20, 20],
+          iconAnchor: [10, 10]
+        });
+        
+        // Criar popup com informações da unidade
+        let popupContent = `
+          <div class="info-box">
+            <h5>${unidade.nome}</h5>
+            <p><strong>Endereço:</strong> ${unidade.endereco}</p>
+            <p><strong>Município:</strong> ${unidade.municipio}</p>
+            <p><strong>Telefone:</strong> ${unidade.telefone}</p>
+            <p><strong>Horário:</strong> ${unidade.horario}</p>
+            <hr>
+            <h6>Vacinas disponíveis:</h6>
+        `;
+        
+        if (unidade.vacinas.length > 0) {
+          popupContent += `<ul class="mb-0">`;
+          unidade.vacinas.forEach(function(vacina) {
+            if (vacina.doses > 0) {
+              popupContent += `<li>${vacina.nome}: ${vacina.doses} doses</li>`;
+            }
+          });
+          popupContent += `</ul>`;
+        } else {
+          popupContent += "<p>Nenhuma vacina disponível no momento</p>";
+        }
+        
+        popupContent += `</div>`;
+        
+        // Adicionar marcador
+        const marker = L.marker([unidade.lat, unidade.lng], {icon: marcadorIcon})
+          .addTo(map)
+          .bindPopup(popupContent);
+        
+        marcadores[unidade.id] = {
+          marker: marker,
+          vacinas: unidade.vacinas,
+          dados: unidade
+        };
+      }
+    });
+    
+    // Função para filtrar marcadores
+    document.getElementById('btn-filtrar').addEventListener('click', function() {
+      const filtroVacina = document.getElementById('filtro-vacina').value;
+      const filtroMunicipio = document.getElementById('filtro-municipio').value;
+      
+      Object.values(marcadores).forEach(function(item) {
+        map.removeLayer(item.marker);
+        
+        let mostrar = true;
+        
+        // Filtrar por vacina
+        if (filtroVacina) {
+          const temVacina = item.vacinas.some(v => v.id == filtroVacina && v.doses > 0);
+          if (!temVacina) mostrar = false;
+        }
+        
+        // Filtrar por município
+        if (filtroMunicipio && item.dados.municipio.id != filtroMunicipio) {
+          mostrar = false;
+        }
+        
+        if (mostrar) {
+          item.marker.addTo(map);
+        }
+      });
+    });
+    
+    // Função para usar localização do usuário
+    document.getElementById('btn-usar-localizacao').addEventListener('click', function() {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(function(position) {
+          const lat = position.coords.latitude;
+          const lng = position.coords.longitude;
+          
+          // Centralizar mapa na posição do usuário
+          map.setView([lat, lng], 14);
+          
+          // Adicionar marcador do usuário
+          L.marker([lat, lng], {
+            icon: L.divIcon({
+              className: 'marcador-usuario',
+              html: '<div style="background-color: #007bff; width: 16px; height: 16px; border-radius: 50%; border: 2px solid white;"></div>',
+              iconSize: [16, 16],
+              iconAnchor: [8, 8]
+            })
+          }).addTo(map).bindPopup("Sua localização");
+          
+          // Atualizar lista de unidades próximas
+          const listaUnidades = document.getElementById('lista-unidades');
+          listaUnidades.innerHTML = '';
+          
+          // Calcular distância para cada unidade
+          const unidadesProximas = Object.values(marcadores)
+            .map(item => {
+              const unidade = item.dados;
+              if (unidade.lat && unidade.lng) {
+                const distancia = calcularDistancia(lat, lng, unidade.lat, unidade.lng);
+                return {
+                  ...unidade,
+                  distancia: distancia
+                };
+              }
+              return null;
+            })
+            .filter(u => u !== null)
+            .sort((a, b) => a.distancia - b.distancia)
+            .slice(0, 5);
+          
+          // Mostrar unidades próximas
+          unidadesProximas.forEach(unidade => {
+            const totalDoses = unidade.vacinas.reduce((sum, v) => sum + v.doses, 0);
+            
+            const li = document.createElement('li');
+            li.className = 'list-group-item';
+            li.innerHTML = `
+              <h6>${unidade.nome}</h6>
+              <p class="mb-1 small">${unidade.endereco}</p>
+              <p class="mb-1 small">Distância: ${unidade.distancia.toFixed(1)} km</p>
+              <p class="mb-0 small">Doses disponíveis: ${totalDoses}</p>
+              <button class="btn btn-sm btn-outline-primary mt-2" onclick="map.setView([${unidade.lat}, ${unidade.lng}], 16); marcadores[${unidade.id}].marker.openPopup();">Ver no mapa</button>
+            `;
+            listaUnidades.appendChild(li);
+          });
+        });
+      } else {
+        alert("Seu navegador não suporta geolocalização.");
+      }
+    });
+    
+    // Função para calcular distância em km entre dois pontos
+    function calcularDistancia(lat1, lon1, lat2, lon2) {
+      const R = 6371; // Raio da Terra em km
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a = 
+        Math.sin(dLat/2) * Math.sin(dLat/2) +
+        Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+        Math.sin(dLon/2) * Math.sin(dLon/2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+      return R * c;
+    }
+  });
+</script>
+{% endblock %}

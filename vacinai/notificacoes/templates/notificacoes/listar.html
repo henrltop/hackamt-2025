@@ -1,0 +1,112 @@
+{% extends 'base.html' %}
+
+{% block title %}Notificações - Vacinaí{% endblock %}
+
+{% block content %}
+<div class="container">
+    <h1 class="mb-4">Minhas Notificações</h1>
+    
+    <div class="card">
+        <div class="card-body p-0">
+            <div class="list-group list-group-flush">
+                {% for notificacao in notificacoes %}
+                <div class="list-group-item {% if not notificacao.lida %}list-group-item-light{% endif %}">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-1">
+                            {% if notificacao.tipo == 'DISPONIBILIDADE' %}
+                                <i class="fas fa-syringe text-success me-2"></i>
+                            {% elif notificacao.tipo == 'VENCIMENTO' %}
+                                <i class="fas fa-exclamation-triangle text-warning me-2"></i>
+                            {% elif notificacao.tipo == 'ESTOQUE_BAIXO' %}
+                                <i class="fas fa-arrow-down text-danger me-2"></i>
+                            {% else %}
+                                <i class="fas fa-info-circle text-primary me-2"></i>
+                            {% endif %}
+                            {{ notificacao.titulo }}
+                        </h5>
+                        <small class="text-muted">{{ notificacao.data_envio|date:"d/m/Y H:i" }}</small>
+                    </div>
+                    <p class="mb-1">{{ notificacao.mensagem }}</p>
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        {% if notificacao.tipo == 'DISPONIBILIDADE' %}
+                        <a href="{% url 'mapa' %}" class="btn btn-sm btn-outline-primary">Ver no mapa</a>
+                        {% endif %}
+                        
+                        {% if not notificacao.lida %}
+                        <form method="post" action="{% url 'marcar_lida' notificacao.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-secondary">Marcar como lida</button>
+                        </form>
+                        {% else %}
+                        <span class="badge bg-secondary">Lida</span>
+                        {% endif %}
+                    </div>
+                </div>
+                {% empty %}
+                <div class="list-group-item text-center py-4">
+                    <p class="mb-0 text-muted">Você não possui notificações.</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if notificacoes.has_other_pages %}
+        <div class="card-footer">
+            <nav aria-label="Paginação">
+                <ul class="pagination justify-content-center mb-0">
+                    {% if notificacoes.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page=1">Primeira</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notificacoes.previous_page_number }}">Anterior</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Primeira</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Anterior</span>
+                    </li>
+                    {% endif %}
+                    
+                    {% for num in notificacoes.paginator.page_range %}
+                        {% if notificacoes.number == num %}
+                        <li class="page-item active"><span class="page-link">{{ num }}</span></li>
+                        {% elif num > notificacoes.number|add:'-3' and num < notificacoes.number|add:'3' %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                        </li>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if notificacoes.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notificacoes.next_page_number }}">Próxima</a>
+                    </li>
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ notificacoes.paginator.num_pages }}">Última</a>
+                    </li>
+                    {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Próxima</span>
+                    </li>
+                    <li class="page-item disabled">
+                        <span class="page-link">Última</span>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+        </div>
+        {% endif %}
+    </div>
+    
+    {% if not_all_read %}
+    <div class="d-grid gap-2 col-md-6 mx-auto mt-3">
+        <form method="post" action="{% url 'marcar_todas_lidas' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-outline-primary">Marcar todas como lidas</button>
+        </form>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

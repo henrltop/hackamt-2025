@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ unidade.nome }} - Vacinaí{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+<style>
+    #map { height: 300px; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ unidade.nome }}</h1>
+        <div>
+            <a href="{% url 'listar_unidades' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+            {% if user.perfilusuario.tipo != 'CIDADAO' %}
+            <a href="{% url 'editar_unidade' unidade.id %}" class="btn btn-primary">
+                <i class="fas fa-edit me-2"></i>Editar
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Informações Gerais</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Código CNES:</strong> {{ unidade.codigo_cnes|default:"Não informado" }}</p>
+                    <p><strong>Município:</strong> {{ unidade.municipio.nome }}/{{ unidade.municipio.uf }}</p>
+                    <p><strong>Endereço:</strong> {{ unidade.endereco }}, {{ unidade.bairro }}</p>
+                    <p><strong>Telefone:</strong> {{ unidade.telefone|default:"Não informado" }}</p>
+                    <p><strong>Email:</strong> {{ unidade.email|default:"Não informado" }}</p>
+                    <p><strong>Status:</strong> 
+                        {% if unidade.ativa %}
+                            <span class="badge bg-success">Ativa</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inativa</span>
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+            
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Horário de Funcionamento</h5>
+                </div>
+                <div class="card-body">
+                    {% if unidade.horario_funcionamento %}
+                        <p>{{ unidade.horario_funcionamento|linebreaks }}</p>
+                    {% else %}
+                        <p class="text-muted">Não informado</p>
+                    {% endif %}
+                </div>
+            </div>
+            
+            {% if user.perfilusuario.tipo != 'CIDADAO' and not estoque_vazio %}
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Ações Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'registrar_abertura_unidade' unidade.id %}" class="btn btn-outline-primary">
+                            <i class="fas fa-vial me-2"></i>Registrar Abertura de Frasco
+                        </a>
+                        <a href="{% url 'atualizar_estoque_unidade' unidade.id %}" class="btn btn-outline-success">
+                            <i class="fas fa-edit me-2"></i>Atualizar Estoque
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Localização</h5>
+                </div>
+                <div class="card-body">
+                    {% if unidade.latitude and unidade.longitude %}
+                        <div id="map"></div>
+                    {% else %}
+                        <div class="alert alert-warning mb-0">
+                            <i class="fas fa-exclamation-triangle me-2"></i>Coordenadas não cadastradas para esta unidade.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Imunobiológicos Disponíveis</h5>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-striped mb-0">
+                            <thead>
+                                <tr>
+                                    <th>Vacina</th>
+                                    <th>Fabricante</th>
+                                    <th>Doses Disponíveis</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for estoque in estoques %}
+                                <tr>
+                                    <td>{{ estoque.lote.tipo_imunobiologico.nome }}</td>
+                                    <td>{{ estoque.lote.tipo_imunobiologico.fabricante }}</td>
+                                    <td>{{ estoque.total_doses_disponiveis }}</td>
+                                    <td>
+                                        {% if estoque.total_doses_disponiveis == 0 %}
+                                            <span class="badge bg-danger">Indisponível</span>
+                                        {% elif estoque.total_doses_disponiveis < 10 %}
+                                            <span class="badge bg-warning text-dark">Baixo</span>
+                                        {% else %}
+                                            <span class="badge bg-success">Disponível</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="4" class="text-center py-3">
+                                        <span class="text-muted">Nenhum imunobiológico cadastrado nesta unidade</span>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+<script>
+    {% if unidade.latitude and unidade.longitude %}
+    document.addEventListener('DOMContentLoaded', function() {
+        var map = L.map('map').setView([{{ unidade.latitude }}, {{ unidade.longitude }}], 15);
+        
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        L.marker([{{ unidade.latitude }}, {{ unidade.longitude }}])
+            .addTo(map)
+            .bindPopup("{{ unidade.nome }}");
+    });
+    {% endif %}
+</script>
+{% endblock %}

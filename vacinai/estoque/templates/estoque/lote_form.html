@@ -1,0 +1,53 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}
+    {% if form.instance.id %}Editar Lote{% else %}Novo Lote{% endif %} - Vacinaí
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">{% if form.instance.id %}Editar Lote{% else %}Novo Lote{% endif %}</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.tipo_imunobiologico|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.numero_lote|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.data_fabricacao|as_crispy_field }}
+                            </div>
+                            <div class="col-md-6">
+                                {{ form.data_validade|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                {{ form.quantidade_frascos|as_crispy_field }}
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Salvar</button>
+                            <a href="{% url 'listar_lotes' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
