@@ -1,42 +1,184 @@
-<!-- Em unidades/templates/unidades/unidade_form.html -->
-{% block extra_js %}
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 fw-bold">
+            <i class="fas fa-clinic-medical me-2 text-primary"></i>
+            {% if unidade %}Editar{% else %}Nova{% endif %} Unidade de Saúde
+        </h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'listar_unidades' %}">Unidades</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{% if unidade %}Editar{% else %}Nova{% endif %}</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="POST" class="row g-3">
+                {% csrf_token %}
+
+                <!-- Informações básicas -->
+                <div class="col-12 mb-2">
+                    <h5 class="fw-bold text-primary"><i class="fas fa-info-circle me-2"></i>Informações Básicas</h5>
+                    <hr>
+                </div>
+
+                <div class="col-md-6">
+                    <label for="{{ form.nome.id_for_label }}" class="form-label fw-medium">Nome da Unidade <span class="text-danger">*</span></label>
+                    {{ form.nome }}
+                    {% if form.nome.errors %}
+                    <div class="invalid-feedback d-block">{{ form.nome.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.codigo_cnes.id_for_label }}" class="form-label fw-medium">Código CNES</label>
+                    {{ form.codigo_cnes }}
+                    {% if form.codigo_cnes.errors %}
+                    <div class="invalid-feedback d-block">{{ form.codigo_cnes.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label class="form-label fw-medium">Status</label>
+                    <div class="form-check form-switch mt-2">
+                        {{ form.ativa }}
+                        <label class="form-check-label" for="{{ form.ativa.id_for_label }}">Unidade Ativa</label>
+                    </div>
+                </div>
+
+                <!-- Localização -->
+                <div class="col-12 mt-4 mb-2">
+                    <h5 class="fw-bold text-primary"><i class="fas fa-map-marker-alt me-2"></i>Localização</h5>
+                    <hr>
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.municipio.id_for_label }}" class="form-label fw-medium">Município <span class="text-danger">*</span></label>
+                    {{ form.municipio }}
+                    {% if form.municipio.errors %}
+                    <div class="invalid-feedback d-block">{{ form.municipio.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.bairro.id_for_label }}" class="form-label fw-medium">Bairro</label>
+                    {{ form.bairro }}
+                    {% if form.bairro.errors %}
+                    <div class="invalid-feedback d-block">{{ form.bairro.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="{{ form.endereco.id_for_label }}" class="form-label fw-medium">Endereço <span class="text-danger">*</span></label>
+                    {{ form.endereco }}
+                    {% if form.endereco.errors %}
+                    <div class="invalid-feedback d-block">{{ form.endereco.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-6">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <label for="{{ form.latitude.id_for_label }}" class="form-label fw-medium">Latitude</label>
+                            {{ form.latitude }}
+                            {% if form.latitude.errors %}
+                            <div class="invalid-feedback d-block">{{ form.latitude.errors }}</div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6">
+                            <label for="{{ form.longitude.id_for_label }}" class="form-label fw-medium">Longitude</label>
+                            {{ form.longitude }}
+                            {% if form.longitude.errors %}
+                            <div class="invalid-feedback d-block">{{ form.longitude.errors }}</div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contato -->
+                <div class="col-12 mt-4 mb-2">
+                    <h5 class="fw-bold text-primary"><i class="fas fa-phone-alt me-2"></i>Contato</h5>
+                    <hr>
+                </div>
+
+                <div class="col-md-4">
+                    <label for="{{ form.telefone.id_for_label }}" class="form-label fw-medium">Telefone</label>
+                    {{ form.telefone }}
+                    {% if form.telefone.errors %}
+                    <div class="invalid-feedback d-block">{{ form.telefone.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <label for="{{ form.email.id_for_label }}" class="form-label fw-medium">E-mail</label>
+                    {{ form.email }}
+                    {% if form.email.errors %}
+                    <div class="invalid-feedback d-block">{{ form.email.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <div class="col-md-4">
+                    <label for="{{ form.horario_funcionamento.id_for_label }}" class="form-label fw-medium">Horário de Funcionamento</label>
+                    {{ form.horario_funcionamento }}
+                    {% if form.horario_funcionamento.errors %}
+                    <div class="invalid-feedback d-block">{{ form.horario_funcionamento.errors }}</div>
+                    {% endif %}
+                </div>
+
+                <!-- Botões -->
+                <div class="col-12 mt-4 d-flex justify-content-end gap-2">
+                    <a href="{% url 'listar_unidades' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save me-2"></i>Salvar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Script para carregar bairros conforme o município selecionado
     document.addEventListener('DOMContentLoaded', function() {
-        const municipioSelect = document.getElementById('id_municipio');
-        const bairroSelect = document.getElementById('id_bairro');
+        const municipioSelect = document.getElementById('{{ form.municipio.id_for_label }}');
+        const bairroSelect = document.getElementById('{{ form.bairro.id_for_label }}');
         
-        function atualizarBairros() {
-            const municipioId = municipioSelect.value;
-            if (!municipioId) {
-                // Limpar dropdown de bairros se nenhum município estiver selecionado
-                bairroSelect.innerHTML = '<option value="">---------</option>';
-                return;
-            }
-            
-            // Buscar bairros via API
-            fetch(`/unidades/api/bairros-por-municipio/${municipioId}/`)
-                .then(response => response.json())
-                .then(data => {
-                    // Limpar dropdown
+        if (municipioSelect && bairroSelect) {
+            municipioSelect.addEventListener('change', function() {
+                const municipioId = this.value;
+                
+                if (!municipioId) {
+                    // Limpar select de bairros
                     bairroSelect.innerHTML = '<option value="">---------</option>';
-                    
-                    // Adicionar novos bairros
-                    data.forEach(bairro => {
-                        const option = document.createElement('option');
-                        option.value = bairro.id;
-                        option.textContent = bairro.nome;
-                        bairroSelect.appendChild(option);
-                    });
-                })
-                .catch(error => console.error('Erro ao carregar bairros:', error));
-        }
-        
-        // Atualizar bairros quando o município for alterado
-        municipioSelect.addEventListener('change', atualizarBairros);
-        
-        // Carregar bairros iniciais se um município já estiver selecionado
-        if (municipioSelect.value) {
-            atualizarBairros();
+                    return;
+                }
+                
+                // Fazer requisição AJAX para obter bairros do município
+                fetch(`/unidades/api/bairros-por-municipio/${municipioId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Limpar select de bairros
+                        bairroSelect.innerHTML = '<option value="">---------</option>';
+                        
+                        // Adicionar opções de bairros
+                        data.forEach(bairro => {
+                            const option = document.createElement('option');
+                            option.value = bairro.id;
+                            option.textContent = bairro.nome;
+                            bairroSelect.appendChild(option);
+                        });
+                    })
+                    .catch(error => console.error('Erro ao carregar bairros:', error));
+            });
         }
     });
 </script>

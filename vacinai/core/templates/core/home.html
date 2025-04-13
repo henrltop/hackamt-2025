@@ -1,112 +1,397 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block content %}
-<div class="jumbotron bg-light p-5 rounded-3 mb-4">
-    <h1 class="display-4">Vacinaí</h1>
-    <p class="lead">Sistema inteligente de gestão e acesso a imunobiológicos.</p>
-    <hr class="my-4">
-    <p>Encontre facilmente onde tomar suas vacinas e monitore disponibilidade em tempo real.</p>
-    <a class="btn btn-primary btn-lg" href="{% url 'mapa' %}">Ver mapa de vacinas</a>
+<!-- Hero Section - Universal para todos os tipos de usuário -->
+<div class="hero-section p-5 mb-4 rounded-4 shadow-sm position-relative overflow-hidden">
+    <div class="row align-items-center">
+        <div class="col-lg-7">
+            <h1 class="display-4 fw-bold mb-3">Vacinaí</h1>
+            <p class="lead fs-4 mb-4">Sistema inteligente de gestão de imunobiológicos de Cáceres</p>
+            <p class="mb-4">Encontre vacinas disponíveis nas unidades de saúde mais próximas de você.</p>
+            
+            <!-- Botão de ação principal - diferente para cada tipo de usuário -->
+            {% if not user.is_authenticated %}
+                <a href="{% url 'mapa' %}" class="btn btn-primary btn-lg px-4 me-2">
+                    <i class="fas fa-map-marked-alt me-2"></i>Ver mapa de vacinas
+                </a>
+                <a class="btn btn-outline-primary btn-lg px-4" href="{% url 'sobre' %}">
+                    <i class="fas fa-info-circle me-2"></i>Saiba mais
+                </a>
+            {% elif user.perfilusuario.tipo == 'ADMIN' %}
+                <a class="btn btn-primary btn-lg px-4" href="{% url 'admin_cadastros' %}">
+                    <i class="fas fa-cogs me-2"></i>Painel de Gestão
+                </a>
+            {% elif user.perfilusuario.tipo == 'GESTOR' %}
+                <a class="btn btn-primary btn-lg px-4" href="{% url 'dashboard' %}">
+                    <i class="fas fa-chart-line me-2"></i>Dashboard da UBS
+                </a>
+            {% else %}
+                <a class="btn btn-primary btn-lg px-4" href="{% url 'mapa' %}">
+                    <i class="fas fa-map-marked-alt me-2"></i>Ver mapa de vacinas
+                </a>
+            {% endif %}
+        </div>
+        <div class="col-lg-5 d-none d-lg-block text-center">
+            <img src="{% static 'img/vaccination.png' %}" alt="Ilustração de vacinação" class="img-fluid" style="max-height: 300px;">
+        </div>
+    </div>
+    
+    <!-- Background elements decorativos -->
+    <div class="position-absolute top-0 end-0 mt-4 me-4 d-none d-lg-block text-primary opacity-10">
+        <i class="fas fa-syringe fa-5x"></i>
+    </div>
+    <div class="position-absolute bottom-0 start-0 mb-4 ms-4 d-none d-lg-block text-primary opacity-10">
+        <i class="fas fa-shield-virus fa-4x"></i>
+    </div>
 </div>
 
-<!-- Botões de Acesso Rápido -->
+<!-- Seção de acesso rápido para usuários autenticados -->
 {% if user.is_authenticated %}
-<div class="card mb-4">
-    <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Acesso Rápido</h5>
-    </div>
-    <div class="card-body">
-        <div class="row">
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'mapa' %}" class="btn btn-outline-primary w-100 p-3">
-                    <i class="fas fa-map-marked-alt fa-2x mb-2"></i><br>
-                    Mapa de Vacinas
-                </a>
-            </div>
-            {% if user.perfilusuario.tipo != 'CIDADAO' %}
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'dashboard' %}" class="btn btn-outline-success w-100 p-3">
-                    <i class="fas fa-chart-line fa-2x mb-2"></i><br>
-                    Dashboard
-                </a>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'listar_lotes' %}" class="btn btn-outline-warning w-100 p-3">
-                    <i class="fas fa-box fa-2x mb-2"></i><br>
-                    Gerenciar Lotes
-                </a>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'registrar_abertura' %}" class="btn btn-outline-danger w-100 p-3">
-                    <i class="fas fa-vial fa-2x mb-2"></i><br>
-                    Registrar Abertura
-                </a>
-            </div>
-            {% endif %}
-            {% if user.perfilusuario.tipo == 'ADMIN' %}
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'admin_cadastros' %}" class="btn btn-outline-dark w-100 p-3">
-                    <i class="fas fa-cogs fa-2x mb-2"></i><br>
-                    Painel Admin
-                </a>
-            </div>
-            {% endif %}
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'notificacoes' %}" class="btn btn-outline-info w-100 p-3">
-                    <i class="fas fa-bell fa-2x mb-2"></i><br>
-                    Notificações
-                </a>
-            </div>
-            <div class="col-md-3 mb-3">
-                <a href="{% url 'perfil' %}" class="btn btn-outline-secondary w-100 p-3">
-                    <i class="fas fa-user fa-2x mb-2"></i><br>
-                    Meu Perfil
-                </a>
+    <div class="card mb-4 shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-bolt me-2"></i>Acesso Rápido</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-3">
+                {% if user.perfilusuario.tipo == 'ADMIN' %}
+                    <!-- Funções para administrador (Secretaria de Saúde) -->
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'admin_cadastros' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-cogs fa-2x text-primary mb-3"></i>
+                                <h6 class="mb-0">Painel de Gestão</h6>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'listar_lotes' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-boxes fa-2x text-success mb-3"></i>
+                                <h6 class="mb-0">Lotes e Estoques</h6>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'distribuir_vacinas' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-truck fa-2x text-warning mb-3"></i>
+                                <h6 class="mb-0">Distribuir Vacinas</h6>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'relatorios' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-chart-bar fa-2x text-danger mb-3"></i>
+                                <h6 class="mb-0">Relatórios</h6>
+                            </div>
+                        </a>
+                    </div>
+                
+                {% elif user.perfilusuario.tipo == 'GESTOR' %}
+                    <!-- Funções para gestor de UBS -->
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'dashboard' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-chart-line fa-2x text-primary mb-3"></i>
+                                <h6 class="mb-0">Dashboard</h6>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'estoque_ubs' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-syringe fa-2x text-success mb-3"></i>
+                                <h6 class="mb-0">Estoque</h6>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'registrar_abertura' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-vial fa-2x text-warning mb-3"></i>
+                                <h6 class="mb-0">Registrar Abertura</h6>
+                            </div>
+                        </a>
+                    </div>
+                    <div class="col-md-4 col-lg-3 mb-3">
+                        <a href="{% url 'registrar_aplicacao' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                            <div class="p-3">
+                                <i class="fas fa-user-md fa-2x text-info mb-3"></i>
+                                <h6 class="mb-0">Registrar Aplicação</h6>
+                            </div>
+                        </a>
+                    </div>
+                {% endif %}
             </div>
         </div>
     </div>
-</div>
 {% endif %}
 
-<!-- Resto da página continua igual... -->
-<div class="row mb-4">
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header bg-primary text-white">
-                <h5 class="card-title mb-0">Para cidadãos</h5>
+<!-- Estatísticas para usuários autenticados em funções de gestão -->
+{% if user.is_authenticated and user.perfilusuario.tipo == 'ADMIN' %}
+    <!-- Dashboard resumido para administrador -->
+    <div class="card mb-4 shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-chart-pie me-2"></i>Visão Geral do Sistema</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-primary text-white border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-hospital-alt fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ total_ubs }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Unidades de Saúde</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-success text-white border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-syringe fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ total_tipos_vacinas }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Tipos de Vacinas</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-warning text-dark border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-vial fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ total_doses }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Doses Disponíveis</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-danger text-white border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ lotes_a_vencer }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Lotes a Vencer (30d)</h6>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <ul class="fa-ul">
-                    <li><span class="fa-li"><i class="fas fa-map-marker-alt text-primary"></i></span>Encontre unidades com vacinas disponíveis</li>
-                    <li><span class="fa-li"><i class="fas fa-bell text-primary"></i></span>Receba notificações sobre novas vacinas</li>
-                    <li><span class="fa-li"><i class="fas fa-history text-primary"></i></span>Acompanhe seu histórico de imunização</li>
-                    <li><span class="fa-li"><i class="fas fa-filter text-primary"></i></span>Filtre por tipo de vacina e faixa etária</li>
-                </ul>
-                {% if not user.is_authenticated %}
-                <a href="{% url 'cadastro' %}" class="btn btn-outline-primary">Cadastre-se</a>
-                {% endif %}
+            
+            <!-- Botão para relatórios completos -->
+            <div class="text-center mt-4">
+                <a href="{% url 'relatorios' %}" class="btn btn-outline-primary px-4">
+                    <i class="fas fa-chart-line me-2"></i>Ver relatórios completos
+                </a>
             </div>
         </div>
     </div>
-    <div class="col-md-6">
-        <div class="card h-100">
-            <div class="card-header bg-success text-white">
-                <h5 class="card-title mb-0">Para gestores</h5>
+{% elif user.is_authenticated and user.perfilusuario.tipo == 'GESTOR' %}
+    <!-- Dashboard resumido para gestor de UBS -->
+    <div class="card mb-4 shadow-sm border-0 rounded-4 overflow-hidden">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-chart-pie me-2"></i>Visão Geral da UBS {{ user.perfilusuario.unidade_gestao.nome }}</h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-primary text-white border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-syringe fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ ubs_tipos_vacinas }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Tipos de Vacinas</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-success text-white border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-vial fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ ubs_doses }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Doses Disponíveis</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-warning text-dark border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-flask fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ ubs_ampolas_abertas }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Ampolas Abertas</h6>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 col-lg-3 mb-3">
+                    <div class="card h-100 bg-danger text-white border-0 rounded-4 shadow-sm stat-card">
+                        <div class="card-body p-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <div class="stat-icon">
+                                    <i class="fas fa-exclamation-triangle fa-2x opacity-75"></i>
+                                </div>
+                                <h3 class="mb-0 fw-bold">{{ ubs_lotes_a_vencer }}</h3>
+                            </div>
+                            <h6 class="text-uppercase fw-bold mb-0">Alerta Vencimento</h6>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="card-body">
-                <ul class="fa-ul">
-                    <li><span class="fa-li"><i class="fas fa-chart-line text-success"></i></span>Dashboard com informações em tempo real</li>
-                    <li><span class="fa-li"><i class="fas fa-exclamation-triangle text-success"></i></span>Alertas de vencimento de lotes</li>
-                    <li><span class="fa-li"><i class="fas fa-boxes text-success"></i></span>Controle eficiente de estoque</li>
-                    <li><span class="fa-li"><i class="fas fa-file-alt text-success"></i></span>Relatórios personalizados</li>
-                </ul>
-                {% if user.is_authenticated and user.perfilusuario.tipo != 'CIDADAO' %}
-                <a href="{% url 'dashboard' %}" class="btn btn-outline-success">Acessar Dashboard</a>
-                {% endif %}
+            
+            <!-- Botão para dashboard completo -->
+            <div class="text-center mt-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-primary px-4">
+                    <i class="fas fa-chart-line me-2"></i>Ver dashboard completo
+                </a>
+            </div>
+        </div>
+    </div>
+{% endif %}
+
+<!-- Seção Universal - Como Funciona -->
+<div class="row g-4 mb-4">
+    <div class="col-12">
+        <div class="card border-0 shadow-sm rounded-4 overflow-hidden">
+            <div class="card-header bg-primary text-white py-3">
+                <h5 class="mb-0 fw-bold"><i class="fas fa-info-circle me-2"></i>Como Funciona o Vacinaí</h5>
+            </div>
+            <div class="card-body p-4">
+                <div class="row align-items-center g-4">
+                    <div class="col-lg-6">
+                        <div class="mb-4">
+                            <h2 class="fs-3 fw-bold mb-4">Nunca foi tão fácil encontrar vacinas disponíveis</h2>
+                            
+                            <div class="d-flex mb-3">
+                                <div class="feature-icon bg-primary text-white rounded-circle p-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                    <i class="fas fa-map-marker-alt"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold">Localização em tempo real</h5>
+                                    <p class="text-muted mb-0">Encontre as unidades de saúde mais próximas com as vacinas que você precisa.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex mb-3">
+                                <div class="feature-icon bg-success text-white rounded-circle p-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                    <i class="fas fa-syringe"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold">Informações precisas</h5>
+                                    <p class="text-muted mb-0">Saiba exatamente quais vacinas estão disponíveis em cada unidade de saúde.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="d-flex">
+                                <div class="feature-icon bg-warning text-dark rounded-circle p-3 me-3 d-flex align-items-center justify-content-center" style="width: 48px; height: 48px;">
+                                    <i class="fas fa-bell"></i>
+                                </div>
+                                <div>
+                                    <h5 class="fw-bold">Notificações</h5>
+                                    <p class="text-muted mb-0">Receba alertas quando novas vacinas estiverem disponíveis ou quando for hora de tomar a próxima dose.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <a href="{% url 'mapa' %}" class="btn btn-primary px-4">
+                            <i class="fas fa-map-marked-alt me-2"></i>Acessar o mapa de vacinas
+                        </a>
+                    </div>
+                    <div class="col-lg-6 d-none d-lg-block text-center">
+                        <img src="{% static 'img/vaccine-map.svg' %}" alt="Mapa de Vacinas" class="img-fluid rounded-4 shadow-sm" style="max-height: 400px;">
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Resto do código da página... -->
+<style>
+    .hero-section {
+        background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        border-left: 5px solid var(--primary-color);
+    }
+    
+    .opacity-10 {
+        opacity: 0.1;
+    }
+    
+    .quick-access-card {
+        transition: all 0.3s ease;
+        color: var(--dark);
+    }
+    
+    .quick-access-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .stat-card {
+        transition: all 0.3s ease;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+    
+    .stat-card::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -50%;
+        width: 100%;
+        height: 100%;
+        background: rgba(255,255,255,0.1);
+        transform: rotate(30deg);
+    }
+    
+    .stat-icon {
+        background-color: rgba(255,255,255,0.2);
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+    
+    .feature-icon {
+        transition: all 0.3s ease;
+    }
+    
+    .d-flex:hover .feature-icon {
+        transform: scale(1.1);
+    }
+    
+    @media (max-width: 992px) {
+        .hero-section {
+            text-align: center;
+        }
+    }
+</style>
 {% endblock %}

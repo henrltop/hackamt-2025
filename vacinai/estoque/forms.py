@@ -1,5 +1,5 @@
 from django import forms
-from .models import Lote, EstoqueImunobiologico, RegistroAbertura
+from .models import Lote, EstoqueImunobiologico, RegistroAbertura, TipoImunobiologico
 
 class LoteForm(forms.ModelForm):
     class Meta:
@@ -58,3 +58,15 @@ class RegistroAberturaForm(forms.ModelForm):
                 )
         
         return cleaned_data
+
+class TipoImunobiologicoForm(forms.ModelForm):
+    class Meta:
+        model = TipoImunobiologico
+        fields = ['nome', 'fabricante', 'doses_por_frasco', 'tempo_validade_apos_aberto', 'publico_alvo']
+        widgets = {
+            'nome': forms.TextInput(attrs={'class': 'form-control'}),
+            'fabricante': forms.TextInput(attrs={'class': 'form-control'}),
+            'doses_por_frasco': forms.NumberInput(attrs={'class': 'form-control'}),
+            'tempo_validade_apos_aberto': forms.NumberInput(attrs={'class': 'form-control', 'placeholder': 'Tempo em horas'}),
+            'publico_alvo': forms.Select(attrs={'class': 'form-select'}),
+        }

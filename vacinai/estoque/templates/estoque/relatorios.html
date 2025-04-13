@@ -1,0 +1,174 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container py-4">
+    <!-- Cabeçalho -->
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="h2 fw-bold"><i class="fas fa-chart-bar me-2 text-primary"></i>Relatórios</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Relatórios</li>
+            </ol>
+        </nav>
+    </div>
+
+    <!-- Cards de relatórios -->
+    <div class="row g-4">
+        <!-- Relatório de Estoque -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 hover-card h-100">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="fas fa-boxes me-2"></i>Estoque por Vacina</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p>Visualize o estoque atual de cada tipo de vacina em todas as unidades ou por unidade específica.</p>
+                    <ul class="mb-4">
+                        <li>Quantidade de frascos disponíveis</li>
+                        <li>Doses disponíveis estimadas</li>
+                        <li>Comparativo entre unidades</li>
+                        <li>Status de validade dos lotes</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{% url 'relatorio_estoque' %}" class="btn btn-outline-primary fw-medium">
+                            <i class="fas fa-file-alt me-2"></i>Gerar Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório de Distribuição -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 hover-card h-100">
+                <div class="card-header bg-success text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="fas fa-truck me-2"></i>Distribuição</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p>Acompanhe o histórico de distribuição de vacinas para as unidades de saúde.</p>
+                    <ul class="mb-4">
+                        <li>Distribuição por período</li>
+                        <li>Quantidade enviada por unidade</li>
+                        <li>Filtro por tipo de vacina</li>
+                        <li>Visualização em gráficos</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{% url 'relatorio_distribuicao' %}" class="btn btn-outline-success fw-medium">
+                            <i class="fas fa-file-alt me-2"></i>Gerar Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório de Aplicações -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 hover-card h-100">
+                <div class="card-header bg-info text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="fas fa-syringe me-2"></i>Aplicações</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p>Visualize estatísticas de aplicações de vacinas realizadas.</p>
+                    <ul class="mb-4">
+                        <li>Total de doses aplicadas</li>
+                        <li>Aplicações por faixa etária</li>
+                        <li>Aplicações por tipo de vacina</li>
+                        <li>Comparativo entre unidades</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{% url 'relatorio_aplicacoes' %}" class="btn btn-outline-info fw-medium">
+                            <i class="fas fa-file-alt me-2"></i>Gerar Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório de Vencimentos -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 hover-card h-100">
+                <div class="card-header bg-danger text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="fas fa-calendar-times me-2"></i>Vencimentos</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p>Acompanhe os lotes próximos ao vencimento e organize a logística de distribuição.</p>
+                    <ul class="mb-4">
+                        <li>Lotes a vencer nos próximos 30, 60 e 90 dias</li>
+                        <li>Lotes vencidos e perdas</li>
+                        <li>Alertas de prioridade de uso</li>
+                        <li>Visualização por unidade</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{% url 'relatorio_vencimentos' %}" class="btn btn-outline-danger fw-medium">
+                            <i class="fas fa-file-alt me-2"></i>Gerar Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório de Eficiência -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 hover-card h-100">
+                <div class="card-header bg-warning text-dark py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="fas fa-chart-line me-2"></i>Eficiência</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p>Avalie a eficiência na utilização dos imunobiológicos pelas unidades.</p>
+                    <ul class="mb-4">
+                        <li>Taxa de aproveitamento de frascos</li>
+                        <li>Comparativo de perdas entre unidades</li>
+                        <li>Tempo médio de utilização após abertura</li>
+                        <li>Recomendações de melhoria</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{% url 'relatorio_eficiencia' %}" class="btn btn-outline-warning fw-medium">
+                            <i class="fas fa-file-alt me-2"></i>Gerar Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Relatório Personalizado -->
+        <div class="col-md-6 col-lg-4">
+            <div class="card shadow-sm border-0 hover-card h-100">
+                <div class="card-header bg-secondary text-white py-3">
+                    <h5 class="card-title mb-0 fw-bold"><i class="fas fa-sliders-h me-2"></i>Personalizado</h5>
+                </div>
+                <div class="card-body p-4">
+                    <p>Crie relatórios personalizados combinando diferentes variáveis e filtros.</p>
+                    <ul class="mb-4">
+                        <li>Escolha variáveis e indicadores</li>
+                        <li>Defina período e granularidade</li>
+                        <li>Selecione formato de visualização</li>
+                        <li>Exporte em PDF, Excel ou CSV</li>
+                    </ul>
+                    <div class="d-grid">
+                        <a href="{% url 'relatorio_personalizado' %}" class="btn btn-outline-secondary fw-medium">
+                            <i class="fas fa-cogs me-2"></i>Configurar Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+        border-radius: 10px;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+    
+    .card-header {
+        border-top-left-radius: 10px !important;
+        border-top-right-radius: 10px !important;
+    }
+</style>
+{% endblock %}

@@ -5,10 +5,15 @@
 {% block content %}
 <div class="container-fluid">
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Lotes de Imunobiológicos</h1>
-        <a href="{% url 'novo_lote' %}" class="btn btn-primary">
-            <i class="fas fa-plus-circle me-2"></i>Novo Lote
-        </a>
+        <h1 class="h2 fw-bold"><i class="fas fa-boxes me-2 text-primary"></i>Lotes de Vacinas</h1>
+        <div class="d-flex gap-2">
+            <a href="{% url 'novo_lote' %}" class="btn btn-primary shadow-sm">
+                <i class="fas fa-plus-circle me-2"></i>Novo Lote
+            </a>
+            <a href="{% url 'listar_tipos_imunobiologicos' %}" class="btn btn-info shadow-sm">
+                <i class="fas fa-syringe me-2"></i>Tipos de Vacinas
+            </a>
+        </div>
     </div>
     
     <div class="card">

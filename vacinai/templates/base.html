@@ -5,20 +5,268 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Vacinaí - Sistema Inteligente de Gestão de Vacinas{% endblock %}</title>
     
-    <!-- Bootstrap CSS -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap 5.3 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     
-    <!-- Fontawesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Montserrat:wght@700;800&display=swap" rel="stylesheet">
+    
+    <!-- Fontawesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
     
     <!-- Estilos customizados -->
     {% load static %}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
     
+    <style>
+        :root {
+            --primary-color: #0d6efd;
+            --primary-dark: #0a58ca;
+            --secondary-color: #6c757d;
+            --accent-color: #0dcaf0;
+            --success-color: #20c997;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+        }
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f9fafb;
+        }
+        
+        .navbar-brand {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            letter-spacing: -0.5px;
+        }
+        
+        .navbar {
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+        
+        .navbar-nav .nav-link {
+            font-weight: 500;
+            padding: 0.5rem 1rem;
+            transition: all 0.3s ease;
+        }
+        
+        .navbar-nav .nav-link:hover {
+            color: var(--accent-color) !important;
+        }
+        
+        .dropdown-item {
+            padding: 0.6rem 1.5rem;
+            font-weight: 500;
+        }
+        
+        .dropdown-item:active {
+            background-color: var(--primary-color);
+        }
+        
+        .btn {
+            font-weight: 500;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.375rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-dark);
+            border-color: var(--primary-dark);
+        }
+        
+        .card {
+            border: none;
+            border-radius: 0.8rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .alert {
+            border-radius: 0.8rem;
+            border: none;
+        }
+        
+        .badge {
+            padding: 0.4em 0.65em;
+            font-weight: 600;
+            border-radius: 50rem;
+        }
+        
+        footer {
+            background-color: #ffffff;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        /* Notificação animada */
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .notification-badge {
+            animation: pulse 1.5s infinite;
+        }
+        
+        /* Personalização da Navbar */
+        .navbar-custom {
+            background: linear-gradient(135deg, #0d6efd, #0a58ca);
+            padding: 1rem 0;
+        }
+        
+        .navbar-custom .navbar-brand {
+            color: white;
+            font-size: 1.5rem;
+        }
+        
+        .navbar-custom .navbar-nav .nav-link {
+            color: rgba(255, 255, 255, 0.85);
+            margin: 0 5px;
+            position: relative;
+        }
+        
+        .navbar-custom .navbar-nav .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: var(--accent-color);
+            transition: width 0.3s ease, left 0.3s ease;
+        }
+        
+        .navbar-custom .navbar-nav .nav-link:hover::after,
+        .navbar-custom .navbar-nav .nav-link.active::after {
+            width: 100%;
+            left: 0;
+        }
+        
+        .navbar-custom .navbar-nav .nav-link.active {
+            color: white;
+            font-weight: 600;
+        }
+        
+        /* Botão "Entrar" com estilo especial */
+        .btn-login {
+            background-color: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            border-radius: 50rem;
+            padding: 0.5rem 1.5rem;
+            margin-left: 0.5rem;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-login:hover {
+            background-color: white;
+            color: var(--primary-dark);
+        }
+        
+        /* Botão "Cadastrar" com estilo especial */
+        .btn-register {
+            background-color: white;
+            color: var(--primary-dark);
+            border-radius: 50rem;
+            padding: 0.5rem 1.5rem;
+            margin-left: 0.5rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-register:hover {
+            background-color: var(--accent-color);
+            color: white;
+        }
+        
+        /* Estilo para o avatar do usuário */
+        .avatar-container {
+            display: flex;
+            align-items: center;
+        }
+        
+        .avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--primary-dark);
+            font-weight: 600;
+            margin-right: 8px;
+        }
+        
+        /* Container principal com sombra subtil */
+        .main-container {
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.05);
+            padding: 2rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        /* Personalização do footer */
+        .footer-custom {
+            background-color: white;
+            padding: 2rem 0;
+            box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.05);
+            position: relative;
+        }
+        
+        .footer-links a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            margin-right: 1.5rem;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+        
+        .footer-links a:hover {
+            color: var(--primary-color);
+        }
+        
+        .footer-logo {
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            text-decoration: none;
+        }
+        
+        .social-icons a {
+            color: var(--primary-color);
+            font-size: 1.2rem;
+            margin-left: 1rem;
+            transition: color 0.3s ease;
+        }
+        
+        .social-icons a:hover {
+            color: var(--accent-color);
+        }
+    </style>
+    
     {% block extra_css %}{% endblock %}
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
         <div class="container">
             <a class="navbar-brand" href="{% url 'home' %}">
                 <i class="fas fa-syringe me-2"></i>Vacinaí
@@ -29,50 +277,88 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Início</a>
+                        <a class="nav-link {% if request.path == '/' %}active{% endif %}" href="{% url 'home' %}">
+                            <i class="fas fa-map-marked-alt me-1"></i>Mapa de Vacinas
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'mapa' %}">Mapa de Vacinas</a>
+                        <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                            <i class="fas fa-home me-1"></i>Dashboard
+                        </a>
                     </li>
                     {% if user.is_authenticated %}
-                        {% if user.perfilusuario.tipo != 'CIDADAO' %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="gestaoDropdown" role="button" data-bs-toggle="dropdown">
-                                Gestão
+                            <a class="nav-link dropdown-toggle {% if '/gestao/' in request.path %}active{% endif %}" href="#" id="gestaoDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-tasks me-1"></i>Gestão
                             </a>
                             <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'dashboard' %}">Dashboard</a></li>
-                                <li><a class="dropdown-item" href="{% url 'listar_lotes' %}">Lotes</a></li>
-                                <li><a class="dropdown-item" href="{% url 'listar_estoque' %}">Estoque</a></li>
-                                <li><a class="dropdown-item" href="{% url 'listar_aberturas' %}">Registros de Abertura</a></li>
+                                <li><a class="dropdown-item" href="{% url 'dashboard' %}">
+                                    <i class="fas fa-chart-line me-2"></i>Dashboard
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'listar_lotes' %}">
+                                    <i class="fas fa-boxes me-2"></i>Lotes
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'listar_estoque' %}">
+                                    <i class="fas fa-warehouse me-2"></i>Estoque
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'listar_aberturas' %}">
+                                    <i class="fas fa-clipboard-list me-2"></i>Registros de Abertura
+                                </a></li>
                             </ul>
                         </li>
-                        {% endif %}
                     {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.path == '/sobre/' %}active{% endif %}" href="{% url 'sobre' %}">
+                            <i class="fas fa-info-circle me-1"></i>Sobre
+                        </a>
+                    </li>
                 </ul>
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-user me-1"></i>{{ user.username }}
-                            {% if notificacoes_nao_lidas > 0 %}
-                            <span class="badge bg-danger">{{ notificacoes_nao_lidas }}</span>
-                            {% endif %}
+                            <div class="avatar-container">
+                                <div class="avatar">
+                                    {{ user.username|first|upper }}
+                                </div>
+                                <span>{{ user.username }}</span>
+                                {% if notificacoes_nao_lidas > 0 %}
+                                <span class="badge bg-danger notification-badge ms-2">{{ notificacoes_nao_lidas }}</span>
+                                {% endif %}
+                            </div>
                         </a>
                         <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="{% url 'perfil' %}">Meu Perfil</a></li>
-                            <li><a class="dropdown-item" href="{% url 'notificacoes' %}">Notificações 
-                                {% if notificacoes_nao_lidas > 0 %}
-                                <span class="badge bg-danger">{{ notificacoes_nao_lidas }}</span>
-                                {% endif %}
-                            </a></li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'perfil' %}">
+                                    <i class="fas fa-user-circle me-2"></i>Meu Perfil
+                                </a>
+                            </li>
+                            <li>
+                                <a class="dropdown-item" href="{% url 'notificacoes' %}">
+                                    <i class="fas fa-bell me-2"></i>Notificações 
+                                    {% if notificacoes_nao_lidas > 0 %}
+                                    <span class="badge bg-danger">{{ notificacoes_nao_lidas }}</span>
+                                    {% endif %}
+                                </a>
+                            </li>
                             
-                            <!-- Nova seção de administração -->
+                            <!-- Informação da UBS vinculada -->
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <div class="dropdown-item disabled text-muted">
+                                    <i class="fas fa-hospital-alt me-2"></i>UBS: {{ user.perfilusuario.unidade_gestao.nome }}
+                                </div>
+                            </li>
+                            
+                            <!-- Seção de administração -->
                             {% if user.perfilusuario.tipo == 'ADMIN' %}
                             <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{% url 'admin_cadastros' %}">
                                 <i class="fas fa-cogs me-2"></i>Administração
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'cadastrar_gestor' %}">
+                                <i class="fas fa-user-plus me-2"></i>Cadastrar Gestor
                             </a></li>
                             {% endif %}
                             
@@ -80,17 +366,25 @@
                             <li>
                                 <form method="post" action="{% url 'logout' %}" class="dropdown-item p-0">
                                     {% csrf_token %}
-                                    <button type="submit" class="dropdown-item" style="background: none; border: none; width: 100%; text-align: left;">Sair</button>
+                                    <button type="submit" class="dropdown-item text-danger" style="background: none; border: none; width: 100%; text-align: left;">
+                                        <i class="fas fa-sign-out-alt me-2"></i>Sair
+                                    </button>
                                 </form>
                             </li>
                         </ul>
                     </li>
                     {% else %}
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'login' %}">Entrar</a>
+                        <a class="btn btn-login" href="{% url 'login' %}">
+                            <i class="fas fa-sign-in-alt me-1"></i>Entrar
+                        </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'cadastro' %}">Cadastrar</a>
+                        <span class="d-inline-block ms-2 text-white" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Apenas gestores e funcionários das UBS podem cadastrar-se">
+                            <button class="btn btn-register" disabled>
+                                <i class="fas fa-user-plus me-1"></i>Cadastrar
+                            </button>
+                        </span>
                     </li>
                     {% endif %}
                 </ul>
@@ -98,39 +392,90 @@
         </div>
     </nav>
 
-    <main class="container py-4 flex-grow-1">
+    <main class="container flex-grow-1 py-4">
         {% if messages %}
             {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm">
+                    {% if message.tags == 'success' %}
+                        <i class="fas fa-check-circle me-2"></i>
+                    {% elif message.tags == 'error' or message.tags == 'danger' %}
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% elif message.tags == 'info' %}
+                        <i class="fas fa-info-circle me-2"></i>
+                    {% endif %}
                     {{ message }}
                     <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
                 </div>
             {% endfor %}
         {% endif %}
         
-        {% block content %}{% endblock %}
+        <div class="main-container">
+            {% block content %}{% endblock %}
+        </div>
     </main>
 
-    <footer class="bg-light py-4 mt-auto">
+    <footer class="footer-custom mt-auto">
         <div class="container">
-            <div class="row">
-                <div class="col-md-6">
-                    <p class="mb-0">&copy; 2025 Vacinaí - Desenvolvido para HackaMT Pantanal</p>
+            <div class="row align-items-center">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <a href="{% url 'home' %}" class="footer-logo">
+                        <i class="fas fa-syringe me-2"></i>Vacinaí
+                    </a>
+                    <p class="mt-2 text-secondary">Sistema Inteligente de Gestão de Vacinas</p>
                 </div>
-                <div class="col-md-6 text-md-end">
-                    <a href="#" class="text-decoration-none text-muted me-3">Termos de Uso</a>
-                    <a href="#" class="text-decoration-none text-muted me-3">Privacidade</a>
-                    <a href="#" class="text-decoration-none text-muted">Contato</a>
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div class="footer-links">
+                        <a href="#"><i class="fas fa-shield-alt me-1"></i>Termos de Uso</a>
+                        <a href="#"><i class="fas fa-lock me-1"></i>Privacidade</a>
+                        <a href="#"><i class="fas fa-question-circle me-1"></i>Ajuda</a>
+                    </div>
+                </div>
+                <div class="col-md-4 text-md-end">
+                    <p class="mb-2">&copy; 2025 Vacinaí - HackaMT Pantanal</p>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-twitter"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-linkedin"></i></a>
+                    </div>
                 </div>
             </div>
         </div>
     </footer>
 
     <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <!-- Scripts customizados -->
     <script src="{% static 'js/main.js' %}"></script>
+    
+    <script>
+        // Adicionar classe active para os links da navbar baseado na URL atual
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentPath = window.location.pathname;
+            const navLinks = document.querySelectorAll('.navbar-nav .nav-link');
+            
+            navLinks.forEach(link => {
+                const href = link.getAttribute('href');
+                if (href === currentPath || (href !== '/' && currentPath.startsWith(href))) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Fechar os alertas automaticamente após 5 segundos
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(alert => {
+                setTimeout(() => {
+                    if (alert) {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    }
+                }, 5000);
+            });
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

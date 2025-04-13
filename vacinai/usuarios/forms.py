@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm, PasswordChangeForm
 from .models import PerfilUsuario
 from unidades.models import Municipio
+from unidades.models import UnidadeSaude
 
 class UserRegisterForm(UserCreationForm):
     email = forms.EmailField()
@@ -39,3 +40,17 @@ class CustomPasswordChangeForm(PasswordChangeForm):
         self.fields['old_password'].label = 'Senha Atual'
         self.fields['new_password1'].label = 'Nova Senha'
         self.fields['new_password2'].label = 'Confirmar Nova Senha'
+
+# usuarios/forms.py
+class GestorRegistrationForm(UserCreationForm):
+    email = forms.EmailField()
+    first_name = forms.CharField(label='Nome')
+    last_name = forms.CharField(label='Sobrenome')
+    unidade_gestao = forms.ModelChoiceField(
+        queryset=UnidadeSaude.objects.filter(ativa=True),
+        label='Unidade de Saúde'
+    )
+    
+    class Meta:
+        model = User
+        fields = ['username', 'email', 'first_name', 'last_name', 'password1', 'password2']

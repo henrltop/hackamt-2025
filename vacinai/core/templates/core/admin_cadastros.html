@@ -1,110 +1,161 @@
 {% extends 'base.html' %}
 
-{% block title %}Administração - Vacinaí{% endblock %}
-
 {% block content %}
-<div class="container">
+<div class="container py-4">
+    <!-- Cabeçalho -->
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Painel Administrativo</h1>
-        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Voltar
-        </a>
+        <h1 class="h2 fw-bold"><i class="fas fa-cogs me-2 text-primary"></i>Painel de Gestão</h1>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'home' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">Painel de Gestão</li>
+            </ol>
+        </nav>
     </div>
 
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="card-title mb-0">Unidades de Saúde</h5>
-                </div>
-                <div class="card-body">
-                    <p>Gerencie as unidades de saúde cadastradas no sistema.</p>
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'listar_unidades' %}" class="btn btn-primary">Listar Unidades</a>
-                        <a href="{% url 'adicionar_unidade' %}" class="btn btn-outline-primary">Nova Unidade</a>
+    <!-- Seção de cadastros -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-database me-2"></i>Cadastros Básicos</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <!-- Tipos de Imunobiológicos -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-syringe fa-4x text-primary opacity-75"></i>
+                            </div>
+                            <h4 class="fw-bold">Tipos de Vacinas</h4>
+                            <p class="text-muted mb-4">Cadastre e gerencie os tipos de imunobiológicos disponíveis no sistema.</p>
+                            <a href="{% url 'listar_tipos_imunobiologicos' %}" class="btn btn-primary w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Acessar
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-success text-white">
-                    <h5 class="card-title mb-0">Imunobiológicos</h5>
-                </div>
-                <div class="card-body">
-                    <p>Cadastre e gerencie os tipos de vacinas disponíveis.</p>
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'listar_tipos_imuno' %}" class="btn btn-success">Listar Vacinas</a>
-                        <a href="{% url 'adicionar_tipo_imuno' %}" class="btn btn-outline-success">Nova Vacina</a>
+                
+                <!-- Lotes -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-boxes fa-4x text-success opacity-75"></i>
+                            </div>
+                            <h4 class="fw-bold">Lotes de Vacinas</h4>
+                            <p class="text-muted mb-4">Gerencie os lotes de vacinas, controle validades e quantidades.</p>
+                            <a href="{% url 'listar_lotes' %}" class="btn btn-success w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Acessar
+                            </a>
+                        </div>
                     </div>
                 </div>
-            </div>
-        </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-info text-white">
-                    <h5 class="card-title mb-0">Municípios e Bairros</h5>
-                </div>
-                <div class="card-body">
-                    <p>Gerencie os municípios e bairros disponíveis no sistema.</p>
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'listar_municipios' %}" class="btn btn-info">Listar Municípios</a>
-                        <a href="{% url 'adicionar_municipio' %}" class="btn btn-outline-info">Novo Município</a>
-                        <hr>
-                        <a href="{% url 'listar_bairros' %}" class="btn btn-info">Listar Bairros</a>
-                        <a href="{% url 'adicionar_bairro' %}" class="btn btn-outline-info">Novo Bairro</a>
+                
+                <!-- Unidades de Saúde -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-clinic-medical fa-4x text-info opacity-75"></i>
+                            </div>
+                            <h4 class="fw-bold">Unidades de Saúde</h4>
+                            <p class="text-muted mb-4">Cadastre e gerencie as unidades de saúde do município.</p>
+                            <a href="{% url 'listar_unidades' %}" class="btn btn-info w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Acessar
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-    <div class="row">
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-warning text-dark">
-                    <h5 class="card-title mb-0">Lotes</h5>
+    
+    <!-- Seção de operações -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-header bg-success text-white py-3">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-tasks me-2"></i>Operações</h4>
+        </div>
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <!-- Distribuição -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-truck fa-4x text-warning opacity-75"></i>
+                            </div>
+                            <h4 class="fw-bold">Distribuir Vacinas</h4>
+                            <p class="text-muted mb-4">Distribua vacinas do estoque central para as unidades de saúde.</p>
+                            <a href="{% url 'distribuir_vacinas' %}" class="btn btn-warning w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Acessar
+                            </a>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <p>Gerencie os lotes de vacinas cadastrados no sistema.</p>
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'listar_lotes' %}" class="btn btn-warning">Listar Lotes</a>
-                        <a href="{% url 'novo_lote' %}" class="btn btn-outline-warning">Novo Lote</a>
+                
+                <!-- Estoque -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-warehouse fa-4x text-primary opacity-75"></i>
+                            </div>
+                            <h4 class="fw-bold">Gerenciar Estoque</h4>
+                            <p class="text-muted mb-4">Visualize e gerencie o estoque de vacinas em todas as unidades.</p>
+                            <a href="{% url 'listar_estoque' %}" class="btn btn-primary w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Acessar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Registros de Abertura -->
+                <div class="col-md-4">
+                    <div class="card h-100 shadow-sm border-0 hover-card">
+                        <div class="card-body p-4 text-center">
+                            <div class="mb-3">
+                                <i class="fas fa-vial fa-4x text-danger opacity-75"></i>
+                            </div>
+                            <h4 class="fw-bold">Registros de Abertura</h4>
+                            <p class="text-muted mb-4">Consulte os registros de abertura de frascos nas unidades.</p>
+                            <a href="{% url 'listar_aberturas' %}" class="btn btn-danger w-100">
+                                <i class="fas fa-arrow-right me-2"></i>Acessar
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-danger text-white">
-                    <h5 class="card-title mb-0">Importação de Dados</h5>
-                </div>
-                <div class="card-body">
-                    <p>Importe dados de APIs externas para o sistema.</p>
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'importar_unidades_cnes' %}" class="btn btn-danger">Importar Unidades do CNES</a>
-                    </div>
-                </div>
-            </div>
+    </div>
+    
+    <!-- Seção de relatórios -->
+    <div class="card shadow-sm border-0">
+        <div class="card-header bg-info text-white py-3">
+            <h4 class="mb-0 fw-bold"><i class="fas fa-chart-bar me-2"></i>Relatórios</h4>
         </div>
-
-        <div class="col-md-4 mb-4">
-            <div class="card h-100">
-                <div class="card-header bg-secondary text-white">
-                    <h5 class="card-title mb-0">Usuários</h5>
-                </div>
-                <div class="card-body">
-                    <p>Gerencie os usuários e permissões do sistema.</p>
-                    <div class="d-grid gap-2">
-                        <a href="{% url 'listar_usuarios' %}" class="btn btn-secondary">Listar Usuários</a>
-                        <a href="{% url 'adicionar_usuario' %}" class="btn btn-outline-secondary">Novo Usuário</a>
-                    </div>
+        <div class="card-body p-4">
+            <div class="row">
+                <div class="col-12 text-center mb-4">
+                    <p class="lead mb-4">Acesse os relatórios gerenciais para análise de dados e tomada de decisões.</p>
+                    <a href="{% url 'relatorios' %}" class="btn btn-lg btn-info px-5">
+                        <i class="fas fa-chart-pie me-2"></i>Ver Relatórios
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .hover-card {
+        transition: all 0.3s ease;
+        border-radius: 0.5rem;
+    }
+    
+    .hover-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
 {% endblock %}

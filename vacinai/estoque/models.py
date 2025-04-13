@@ -2,6 +2,7 @@
 from django.db import models
 from unidades.models import UnidadeSaude
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 class TipoImunobiologico(models.Model):
     PUBLICO_CHOICES = [
@@ -34,6 +35,14 @@ class Lote(models.Model):
     data_validade = models.DateField()
     quantidade_frascos = models.PositiveIntegerField()
     data_cadastro = models.DateTimeField(auto_now_add=True)
+    quantidade_frascos_central = models.PositiveIntegerField(default=0)
+    
+    def save(self, *args, **kwargs):
+        # Se estiver criando um novo objeto OU se quantidade_frascos_central for zero
+        if not self.pk or self.quantidade_frascos_central == 0:
+            # Inicializa quantidade_frascos_central com quantidade_frascos
+            self.quantidade_frascos_central = self.quantidade_frascos
+        super().save(*args, **kwargs)
     
     def __str__(self):
         return f"{self.tipo_imunobiologico.nome} - Lote {self.numero_lote}"
@@ -99,3 +108,22 @@ class RegistroAbertura(models.Model):
     
     def __str__(self):
         return f"{self.estoque.lote.tipo_imunobiologico.nome} - {self.data_hora_abertura.strftime('%d/%m/%Y %H:%M')}"
+    
+# Para RegistroAbertura
+    responsavel = models.CharField(max_length=100, null=True, blank=True)
+    motivo = models.CharField(max_length=255, null=True, blank=True)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
+    
+class DistribuicaoLote(models.Model):
+    lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
+    unidade = models.ForeignKey(UnidadeSaude, on_delete=models.CASCADE)
+    quantidade_frascos = models.PositiveIntegerField()
+    data_distribuicao = models.DateTimeField(default=timezone.now)
+    usuario = models.ForeignKey(User, on_delete=models.CASCADE)
+    observacoes = models.TextField(blank=True, null=True)
+    
+    def __str__(self):
+        return f"Distribuição de {self.quantidade_frascos} frascos do lote {self.lote.numero_lote} para {self.unidade.nome}"
+    
+    class Meta:
+        ordering = ['-data_distribuicao']

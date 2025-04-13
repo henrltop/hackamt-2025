@@ -40,10 +40,19 @@ def mapa_vacinas(request):
     # Obter todos os municípios para o filtro
     municipios = Municipio.objects.all()
     
+    # Verificar se Cáceres está nos municípios e obter seu ID
+    caceres_id = None
+    for municipio in municipios:
+        if municipio.nome.lower() == 'cáceres' or municipio.nome.lower() == 'caceres':
+            caceres_id = municipio.id
+            break
+    
     context = {
         'unidades': unidades,
         'tipos_imuno': tipos_imuno,
         'municipios': municipios,
+        'caceres_id': caceres_id,  # Passar o ID de Cáceres para o template
+        'is_homepage': request.path == '/',  # Identificar se é a página inicial
     }
     return render(request, 'core/mapa.html', context)
 

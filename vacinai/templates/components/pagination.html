@@ -1,0 +1,65 @@
+{% if page_obj.paginator.num_pages > 1 %}
+<nav aria-label="Paginação">
+    <ul class="pagination justify-content-center mb-0">
+        {% if page_obj.has_previous %}
+        <li class="page-item">
+            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page=1" aria-label="Primeira">
+                <span aria-hidden="true">&laquo;&laquo;</span>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.previous_page_number }}" aria-label="Anterior">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&laquo;&laquo;</span>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link">&laquo;</span>
+        </li>
+        {% endif %}
+        
+        {% with ''|center:page_obj.paginator.num_pages as range %}
+            {% for _ in range %}
+                {% with forloop.counter as i %}
+                    {% if page_obj.paginator.num_pages <= 7 or i == 1 or i == page_obj.paginator.num_pages or i|add:"-1" <= page_obj.number and i|add:"1" >= page_obj.number %}
+                        <li class="page-item {% if i == page_obj.number %}active{% endif %}">
+                            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ i }}">{{ i }}</a>
+                        </li>
+                    {% elif i == 2 and page_obj.number > 3 or i == page_obj.paginator.num_pages|add:"-1" and page_obj.number < page_obj.paginator.num_pages|add:"-2" %}
+                        <li class="page-item disabled">
+                            <span class="page-link">...</span>
+                        </li>
+                    {% endif %}
+                {% endwith %}
+            {% endfor %}
+        {% endwith %}
+        
+        {% if page_obj.has_next %}
+        <li class="page-item">
+            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.next_page_number }}" aria-label="Próxima">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+        <li class="page-item">
+            <a class="page-link" href="?{% for key, value in request.GET.items %}{% if key != 'page' %}{{ key }}={{ value }}&{% endif %}{% endfor %}page={{ page_obj.paginator.num_pages }}" aria-label="Última">
+                <span aria-hidden="true">&raquo;&raquo;</span>
+            </a>
+        </li>
+        {% else %}
+        <li class="page-item disabled">
+            <span class="page-link">&raquo;</span>
+        </li>
+        <li class="page-item disabled">
+            <span class="page-link">&raquo;&raquo;</span>
+        </li>
+        {% endif %}
+    </ul>
+</nav>
+
+<div class="text-center text-muted small mt-2">
+    Mostrando {{ page_obj.start_index }} a {{ page_obj.end_index }} de {{ page_obj.paginator.count }} registros
+</div>
+{% endif %}
