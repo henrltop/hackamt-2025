@@ -1,0 +1,43 @@
+<!-- Em unidades/templates/unidades/unidade_form.html -->
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const municipioSelect = document.getElementById('id_municipio');
+        const bairroSelect = document.getElementById('id_bairro');
+        
+        function atualizarBairros() {
+            const municipioId = municipioSelect.value;
+            if (!municipioId) {
+                // Limpar dropdown de bairros se nenhum município estiver selecionado
+                bairroSelect.innerHTML = '<option value="">---------</option>';
+                return;
+            }
+            
+            // Buscar bairros via API
+            fetch(`/unidades/api/bairros-por-municipio/${municipioId}/`)
+                .then(response => response.json())
+                .then(data => {
+                    // Limpar dropdown
+                    bairroSelect.innerHTML = '<option value="">---------</option>';
+                    
+                    // Adicionar novos bairros
+                    data.forEach(bairro => {
+                        const option = document.createElement('option');
+                        option.value = bairro.id;
+                        option.textContent = bairro.nome;
+                        bairroSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Erro ao carregar bairros:', error));
+        }
+        
+        // Atualizar bairros quando o município for alterado
+        municipioSelect.addEventListener('change', atualizarBairros);
+        
+        // Carregar bairros iniciais se um município já estiver selecionado
+        if (municipioSelect.value) {
+            atualizarBairros();
+        }
+    });
+</script>
+{% endblock %}

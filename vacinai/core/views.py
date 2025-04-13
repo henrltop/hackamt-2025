@@ -2,6 +2,10 @@ from django.shortcuts import render
 from estoque.models import TipoImunobiologico, EstoqueImunobiologico
 from unidades.models import UnidadeSaude, Municipio
 from django.db.models import Sum, F, ExpressionWrapper, IntegerField
+from django.contrib import messages # Adicione esta linha se ainda não estiver importado
+from django.contrib.auth.decorators import login_required # Adicione esta linha
+from django.shortcuts import render, redirect # Adicione redirect se ainda não estiver importado
+
 
 def home(request):
     tipos_imuno = TipoImunobiologico.objects.all()[:6]  # Limitar para 6 tipos
@@ -42,3 +46,20 @@ def mapa_vacinas(request):
         'municipios': municipios,
     }
     return render(request, 'core/mapa.html', context)
+
+@login_required
+def admin_cadastros(request):
+    # Verificar se o usuário é administrador
+    try:
+        # Esta versão adiciona tratamento de erros para o caso do usuário
+        # não ter um perfil associado ou o perfil não ter o atributo 'tipo'
+        if request.user.perfilusuario.tipo != 'ADMIN':
+            messages.error(request, "Você não tem permissão para acessar esta página.")
+            return redirect('home')
+    except AttributeError:
+        # A versão original não tratava esta exceção, o que poderia causar
+        # erros 500 se o usuário não tivesse um perfil associado
+        messages.error(request, "Erro ao verificar permissões de usuário.")
+        return redirect('home')
+    
+    return render(request, 'core/admin_cadastros.html')

@@ -1,0 +1,110 @@
+{% extends 'base.html' %}
+
+{% block title %}Administração - Vacinaí{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>Painel Administrativo</h1>
+        <a href="{% url 'home' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left me-2"></i>Voltar
+        </a>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">Unidades de Saúde</h5>
+                </div>
+                <div class="card-body">
+                    <p>Gerencie as unidades de saúde cadastradas no sistema.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'listar_unidades' %}" class="btn btn-primary">Listar Unidades</a>
+                        <a href="{% url 'adicionar_unidade' %}" class="btn btn-outline-primary">Nova Unidade</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">Imunobiológicos</h5>
+                </div>
+                <div class="card-body">
+                    <p>Cadastre e gerencie os tipos de vacinas disponíveis.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'listar_tipos_imuno' %}" class="btn btn-success">Listar Vacinas</a>
+                        <a href="{% url 'adicionar_tipo_imuno' %}" class="btn btn-outline-success">Nova Vacina</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="card-title mb-0">Municípios e Bairros</h5>
+                </div>
+                <div class="card-body">
+                    <p>Gerencie os municípios e bairros disponíveis no sistema.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'listar_municipios' %}" class="btn btn-info">Listar Municípios</a>
+                        <a href="{% url 'adicionar_municipio' %}" class="btn btn-outline-info">Novo Município</a>
+                        <hr>
+                        <a href="{% url 'listar_bairros' %}" class="btn btn-info">Listar Bairros</a>
+                        <a href="{% url 'adicionar_bairro' %}" class="btn btn-outline-info">Novo Bairro</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="card-title mb-0">Lotes</h5>
+                </div>
+                <div class="card-body">
+                    <p>Gerencie os lotes de vacinas cadastrados no sistema.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'listar_lotes' %}" class="btn btn-warning">Listar Lotes</a>
+                        <a href="{% url 'novo_lote' %}" class="btn btn-outline-warning">Novo Lote</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="card-title mb-0">Importação de Dados</h5>
+                </div>
+                <div class="card-body">
+                    <p>Importe dados de APIs externas para o sistema.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'importar_unidades_cnes' %}" class="btn btn-danger">Importar Unidades do CNES</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-secondary text-white">
+                    <h5 class="card-title mb-0">Usuários</h5>
+                </div>
+                <div class="card-body">
+                    <p>Gerencie os usuários e permissões do sistema.</p>
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'listar_usuarios' %}" class="btn btn-secondary">Listar Usuários</a>
+                        <a href="{% url 'adicionar_usuario' %}" class="btn btn-outline-secondary">Novo Usuário</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

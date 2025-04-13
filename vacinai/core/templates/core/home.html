@@ -1,4 +1,3 @@
-<!-- templates/core/home.html -->
 {% extends 'base.html' %}
 
 {% block content %}
@@ -10,6 +9,66 @@
     <a class="btn btn-primary btn-lg" href="{% url 'mapa' %}">Ver mapa de vacinas</a>
 </div>
 
+<!-- Botões de Acesso Rápido -->
+{% if user.is_authenticated %}
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">Acesso Rápido</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'mapa' %}" class="btn btn-outline-primary w-100 p-3">
+                    <i class="fas fa-map-marked-alt fa-2x mb-2"></i><br>
+                    Mapa de Vacinas
+                </a>
+            </div>
+            {% if user.perfilusuario.tipo != 'CIDADAO' %}
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'dashboard' %}" class="btn btn-outline-success w-100 p-3">
+                    <i class="fas fa-chart-line fa-2x mb-2"></i><br>
+                    Dashboard
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'listar_lotes' %}" class="btn btn-outline-warning w-100 p-3">
+                    <i class="fas fa-box fa-2x mb-2"></i><br>
+                    Gerenciar Lotes
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'registrar_abertura' %}" class="btn btn-outline-danger w-100 p-3">
+                    <i class="fas fa-vial fa-2x mb-2"></i><br>
+                    Registrar Abertura
+                </a>
+            </div>
+            {% endif %}
+            {% if user.perfilusuario.tipo == 'ADMIN' %}
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'admin_cadastros' %}" class="btn btn-outline-dark w-100 p-3">
+                    <i class="fas fa-cogs fa-2x mb-2"></i><br>
+                    Painel Admin
+                </a>
+            </div>
+            {% endif %}
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'notificacoes' %}" class="btn btn-outline-info w-100 p-3">
+                    <i class="fas fa-bell fa-2x mb-2"></i><br>
+                    Notificações
+                </a>
+            </div>
+            <div class="col-md-3 mb-3">
+                <a href="{% url 'perfil' %}" class="btn btn-outline-secondary w-100 p-3">
+                    <i class="fas fa-user fa-2x mb-2"></i><br>
+                    Meu Perfil
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Resto da página continua igual... -->
 <div class="row mb-4">
     <div class="col-md-6">
         <div class="card h-100">
@@ -49,33 +108,5 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="col-12">
-        <h2 class="mb-4">Vacinas disponíveis</h2>
-    </div>
-    {% for tipo in tipos_imuno %}
-    <div class="col-md-4 mb-4">
-        <div class="card h-100">
-            <div class="card-body">
-                <h5 class="card-title">{{ tipo.nome }}</h5>
-                <p class="card-text">{{ tipo.descricao|default:"" }}</p>
-                <p class="card-text">
-                    <small class="text-muted">
-                        Público-alvo: {{ tipo.get_publico_alvo_display }}
-                    </small>
-                </p>
-            </div>
-            <div class="card-footer">
-                <a href="{% url 'mapa' %}?vacina={{ tipo.id }}" class="btn btn-sm btn-outline-primary">Encontrar onde tomar</a>
-            </div>
-        </div>
-    </div>
-    {% empty %}
-    <div class="col-12">
-        <div class="alert alert-info">
-            Nenhum tipo de imunobiológico cadastrado.
-        </div>
-    </div>
-    {% endfor %}
-</div>
+<!-- Resto do código da página... -->
 {% endblock %}

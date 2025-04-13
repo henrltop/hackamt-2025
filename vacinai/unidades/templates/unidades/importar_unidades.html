@@ -1,0 +1,61 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Importar Unidades do CNES - Vacinaí{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <h1 class="mb-4">Importar Unidades do CNES</h1>
+            
+            <div class="card">
+                <div class="card-body">
+                    <p class="alert alert-info">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Este recurso permite importar unidades de saúde diretamente da base do CNES (Cadastro Nacional de Estabelecimentos de Saúde).
+                    </p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="municipio" class="form-label">Selecione o Município:</label>
+                                    <select name="municipio" id="municipio" class="form-select" required>
+                                        <option value="">---------</option>
+                                        {% for municipio in municipios %}
+                                            <option value="{{ municipio.id }}">{{ municipio.nome }}/{{ municipio.uf }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="tipo_unidade" class="form-label">Tipo de Unidade (opcional):</label>
+                                    <select name="tipo_unidade" id="tipo_unidade" class="form-select">
+                                        <option value="">Todos os tipos</option>
+                                        <option value="01">Posto de Saúde</option>
+                                        <option value="02">Centro de Saúde/Unidade Básica</option>
+                                        <option value="04">Policlínica</option>
+                                        <option value="07">Hospital Geral</option>
+                                        <option value="73">Pronto Atendimento</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-download me-2"></i>Importar Unidades
+                            </button>
+                            <a href="{% url 'admin_cadastros' %}" class="btn btn-secondary">Cancelar</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

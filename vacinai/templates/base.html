@@ -44,7 +44,7 @@
                                 <li><a class="dropdown-item" href="{% url 'dashboard' %}">Dashboard</a></li>
                                 <li><a class="dropdown-item" href="{% url 'listar_lotes' %}">Lotes</a></li>
                                 <li><a class="dropdown-item" href="{% url 'listar_estoque' %}">Estoque</a></li>
-                                <li><a class="dropdown-item" href="{% url 'listar_aberturas' %}">Registro de Frascos</a></li>
+                                <li><a class="dropdown-item" href="{% url 'listar_aberturas' %}">Registros de Abertura</a></li>
                             </ul>
                         </li>
                         {% endif %}
@@ -67,8 +67,22 @@
                                 <span class="badge bg-danger">{{ notificacoes_nao_lidas }}</span>
                                 {% endif %}
                             </a></li>
+                            
+                            <!-- Nova seção de administração -->
+                            {% if user.perfilusuario.tipo == 'ADMIN' %}
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="{% url 'logout' %}">Sair</a></li>
+                            <li><a class="dropdown-item" href="{% url 'admin_cadastros' %}">
+                                <i class="fas fa-cogs me-2"></i>Administração
+                            </a></li>
+                            {% endif %}
+                            
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'logout' %}" class="dropdown-item p-0">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item" style="background: none; border: none; width: 100%; text-align: left;">Sair</button>
+                                </form>
+                            </li>
                         </ul>
                     </li>
                     {% else %}
