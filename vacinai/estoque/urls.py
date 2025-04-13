@@ -25,10 +25,12 @@ urlpatterns = [
     path('api/lotes-por-tipo/<int:tipo_id>/', views.api_lotes_por_tipo, name='api_lotes_por_tipo'),
     path('api/lotes-ubs-por-tipo/<int:tipo_id>/', views.api_lotes_ubs_por_tipo, name='api_lotes_ubs_por_tipo'),
     path('api/estoque-ubs-por-lote/<int:lote_id>/', views.api_estoque_ubs_por_lote, name='api_estoque_ubs_por_lote'),
+    path('api/lote-info/<int:lote_id>/', views.api_lote_info, name='api_lote_info'),
     
     # Relatórios
     path('relatorios/', views.relatorios, name='relatorios'),
     path('relatorios/estoque/', views.relatorio_estoque, name='relatorio_estoque'),
+    path('relatorios/estoque/unidade/<int:unidade_id>/', views.relatorio_estoque_unidade, name='relatorio_estoque_unidade'),
     path('relatorios/distribuicao/', views.relatorio_distribuicao, name='relatorio_distribuicao'),
     path('relatorios/aplicacoes/', views.relatorio_aplicacoes, name='relatorio_aplicacoes'),
     path('relatorios/vencimentos/', views.relatorio_vencimentos, name='relatorio_vencimentos'),

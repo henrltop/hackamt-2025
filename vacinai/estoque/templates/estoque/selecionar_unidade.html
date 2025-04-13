@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Selecionar Unidade - Vacinaí{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-3">Selecionar Unidade de Saúde</h2>
+            <p class="text-muted">Selecione a unidade de saúde para atualizar o estoque.</p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'listar_estoque' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
+        </div>
+    </div>
+
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-hospital-alt me-2"></i>Unidades Disponíveis</h5>
+        </div>
+        <div class="card-body p-4">
+            <form method="post" action="{% url 'atualizar_estoque' %}">
+                {% csrf_token %}
+                <div class="mb-4">
+                    <label for="unidade" class="form-label">Unidade de Saúde</label>
+                    <select name="unidade" id="unidade" class="form-select form-select-lg" required>
+                        <option value="">Selecione uma unidade...</option>
+                        {% for unidade in unidades %}
+                            <option value="{{ unidade.id }}">
+                                {{ unidade.nome }} ({{ unidade.municipio.nome }}/{{ unidade.municipio.uf }})
+                            </option>
+                        {% endfor %}
+                    </select>
+                    <div class="form-text">
+                        Selecione a unidade para a qual deseja atualizar o estoque.
+                    </div>
+                </div>
+                
+                <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                    <a href="{% url 'listar_estoque' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-check me-1"></i>Continuar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

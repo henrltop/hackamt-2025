@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Painel de Gestão - Vacinaí{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h2 mb-3">Painel de Gestão</h1>
+            <p class="text-muted">
+                Gerencie lotes, estoque e distribuição de imunobiológicos.
+                {% if user.perfilusuario.tipo == 'GESTOR' %}
+                    Visualize dados da unidade {{ unidade.nome }}.
+                {% else %}
+                    Visualize dados de todas as unidades do sistema.
+                {% endif %}
+            </p>
+        </div>
+        <div class="col-md-4 text-md-end">
+            {% if user.perfilusuario.tipo == 'ADMIN' %}
+                <a href="{% url 'distribuir_vacinas' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-truck me-2"></i>Distribuir Vacinas
+                </a>
+            {% elif user.perfilusuario.tipo == 'GESTOR' %}
+                <a href="{% url 'registrar_abertura' %}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-vial me-2"></i>Registrar Abertura
+                </a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Cartões de estatísticas -->
+    <div class="row g-3 mb-4">
+        {% if user.perfilusuario.tipo == 'ADMIN' %}
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-primary text-white h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-hospital-alt fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ total_ubs }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Unidades de Saúde</h6>
+                        <a href="{% url 'listar_unidades' %}" class="text-white opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-success text-white h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-syringe fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ total_tipos_vacinas }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Tipos de Vacinas</h6>
+                        <a href="{% url 'listar_tipos_imunobiologicos' %}" class="text-white opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-warning text-dark h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon bg-dark">
+                                <i class="fas fa-vial fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ total_doses }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Doses Disponíveis</h6>
+                        <a href="{% url 'listar_estoque' %}" class="text-dark opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver estoque
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-danger text-white h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ lotes_a_vencer }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Lotes a Vencer (30d)</h6>
+                        <a href="{% url 'listar_lotes' %}?status=vencendo" class="text-white opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver lotes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <!-- Estatísticas para gestores de UBS -->
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-primary text-white h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-syringe fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ ubs_tipos_vacinas }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Tipos de Vacinas</h6>
+                        <a href="{% url 'listar_estoque' %}" class="text-white opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver detalhes
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-success text-white h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-vial fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ ubs_doses }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Doses Disponíveis</h6>
+                        <a href="{% url 'listar_estoque' %}" class="text-white opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver estoque
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-warning text-dark h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon bg-dark">
+                                <i class="fas fa-flask fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ ubs_ampolas_abertas }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Ampolas Abertas</h6>
+                        <a href="{% url 'listar_aberturas' %}" class="text-dark opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver aberturas
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6 col-lg-3">
+                <div class="card bg-danger text-white h-100 border-0 rounded-4 shadow-sm">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div class="stat-icon">
+                                <i class="fas fa-exclamation-triangle fa-2x"></i>
+                            </div>
+                            <h3 class="mb-0">{{ ubs_lotes_a_vencer }}</h3>
+                        </div>
+                        <h6 class="card-title text-uppercase">Alerta Vencimento</h6>
+                        <a href="{% url 'listar_lotes' %}?status=vencendo" class="text-white opacity-75 small">
+                            <i class="fas fa-arrow-right me-1"></i>Ver lotes
+                        </a>
+                    </div>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Acesso rápido a funcionalidades -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-primary text-white py-3">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-bolt me-2"></i>Acesso Rápido</h5>
+                </div>
+                <div class="card-body p-4">
+                    <div class="row g-3">
+                        {% if user.perfilusuario.tipo == 'ADMIN' %}
+                            <!-- Funções para administrador -->
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'listar_lotes' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-boxes fa-2x text-primary mb-3"></i>
+                                        <h6 class="mb-0">Lotes e Estoques</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'distribuir_vacinas' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-truck fa-2x text-success mb-3"></i>
+                                        <h6 class="mb-0">Distribuir Vacinas</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'relatorios' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-chart-bar fa-2x text-warning mb-3"></i>
+                                        <h6 class="mb-0">Relatórios</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'admin_cadastros' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-cogs fa-2x text-danger mb-3"></i>
+                                        <h6 class="mb-0">Administração</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'listar_unidades' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-hospital-alt fa-2x text-info mb-3"></i>
+                                        <h6 class="mb-0">Unidades de Saúde</h6>
+                                    </div>
+                                </a>
+                            </div>
+                        {% elif user.perfilusuario.tipo == 'GESTOR' %}
+                            <!-- Funções para gestor de UBS -->
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'listar_estoque' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-warehouse fa-2x text-primary mb-3"></i>
+                                        <h6 class="mb-0">Estoque</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'registrar_abertura' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-vial fa-2x text-success mb-3"></i>
+                                        <h6 class="mb-0">Registrar Abertura</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'registrar_aplicacao' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-user-md fa-2x text-warning mb-3"></i>
+                                        <h6 class="mb-0">Registrar Aplicação</h6>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4 col-lg-3 mb-3">
+                                <a href="{% url 'perfil' %}" class="card h-100 border-0 shadow-sm text-center p-3 text-decoration-none quick-access-card">
+                                    <div class="p-3">
+                                        <i class="fas fa-user-circle fa-2x text-info mb-3"></i>
+                                        <h6 class="mb-0">Meu Perfil</h6>
+                                    </div>
+                                </a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if user.perfilusuario.tipo == 'ADMIN' %}
+    <!-- Lista de lotes disponíveis para distribuição (apenas para administradores) -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-primary text-white py-3 d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0 fw-bold"><i class="fas fa-boxes me-2"></i>Lotes Disponíveis para Distribuição</h5>
+                    <a href="{% url 'distribuir_vacinas' %}" class="btn btn-light btn-sm">
+                        <i class="fas fa-truck me-1"></i>Distribuir Vacinas
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Vacina</th>
+                                    <th>Lote</th>
+                                    <th>Validade</th>
+                                    <th>Frascos</th>
+                                    <th>Doses por Frasco</th>
+                                    <th>Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% if lotes_disponiveis %}
+                                    {% for lote in lotes_disponiveis %}
+                                        <tr>
+                                            <td>{{ lote.tipo_imunobiologico.nome }}</td>
+                                            <td>{{ lote.numero_lote }}</td>
+                                            <td>{{ lote.data_validade|date:"d/m/Y" }}</td>
+                                            <td>{{ lote.quantidade_frascos_central }}</td>
+                                            <td>{{ lote.tipo_imunobiologico.doses_por_frasco }}</td>
+                                            <td>
+                                                <a href="{% url 'distribuir_vacinas' %}?lote={{ lote.id }}" class="btn btn-sm btn-outline-primary">
+                                                    <i class="fas fa-truck me-1"></i>Distribuir
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                {% else %}
+                                    <tr>
+                                        <td colspan="6" class="text-center p-3">
+                                            <p class="text-muted mb-0">Nenhum lote disponível para distribuição.</p>
+                                        </td>
+                                    </tr>
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="card-footer bg-light">
+                    <a href="{% url 'listar_lotes' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-th-list me-1"></i>Ver todos os lotes
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+    .dashboard-container {
+        padding: 1rem 0;
+    }
+    
+    .stat-icon {
+        background-color: rgba(255,255,255,0.2);
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 12px;
+    }
+    
+    .quick-access-card {
+        transition: all 0.3s ease;
+        color: var(--dark);
+    }
+    
+    .quick-access-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+    }
+</style>
+{% endblock %}

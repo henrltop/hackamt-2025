@@ -127,3 +127,32 @@ def listar_usuarios(request):
         'title': 'Gestores de UBS'
     }
     return render(request, 'usuarios/listar_usuarios.html', context)
+
+@login_required
+def editar_usuario(request, pk):
+    if request.user.perfilusuario.tipo != 'ADMIN':
+        messages.error(request, "Você não tem permissão para acessar esta página.")
+        return redirect('home')
+    
+    usuario = get_object_or_404(User, pk=pk)
+    
+    if request.method == 'POST':
+        u_form = UserUpdateForm(request.POST, instance=usuario)
+        p_form = ProfileUpdateForm(request.POST, instance=usuario.perfilusuario)
+        
+        if u_form.is_valid() and p_form.is_valid():
+            u_form.save()
+            p_form.save()
+            messages.success(request, f'Usuário {usuario.username} atualizado com sucesso!')
+            return redirect('listar_usuarios')
+    else:
+        u_form = UserUpdateForm(instance=usuario)
+        p_form = ProfileUpdateForm(instance=usuario.perfilusuario)
+    
+    context = {
+        'u_form': u_form,
+        'p_form': p_form,
+        'title': f'Editar Usuário: {usuario.username}',
+        'usuario': usuario
+    }
+    return render(request, 'usuarios/editar_usuario.html', context)

@@ -281,32 +281,81 @@
                             <i class="fas fa-map-marked-alt me-1"></i>Mapa de Vacinas
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
-                            <i class="fas fa-home me-1"></i>Dashboard
-                        </a>
-                    </li>
                     {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle {% if '/gestao/' in request.path %}active{% endif %}" href="#" id="gestaoDropdown" role="button" data-bs-toggle="dropdown">
-                                <i class="fas fa-tasks me-1"></i>Gestão
-                            </a>
-                            <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="{% url 'dashboard' %}">
-                                    <i class="fas fa-chart-line me-2"></i>Dashboard
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'listar_lotes' %}">
-                                    <i class="fas fa-boxes me-2"></i>Lotes
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'listar_estoque' %}">
-                                    <i class="fas fa-warehouse me-2"></i>Estoque
-                                </a></li>
-                                <li><a class="dropdown-item" href="{% url 'listar_aberturas' %}">
-                                    <i class="fas fa-clipboard-list me-2"></i>Registros de Abertura
-                                </a></li>
-                            </ul>
-                        </li>
+                        {% if user.perfilusuario.tipo == 'ADMIN' %}
+                            <!-- Opções para administradores (acesso total) -->
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Painel de Gestão
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if '/gestao/' in request.path or 'lotes' in request.path or 'estoque' in request.path %}active{% endif %}" 
+                                   href="#" id="gestaoDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-tasks me-1"></i>Gerenciar Insumos
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'listar_lotes' %}">
+                                        <i class="fas fa-boxes me-2"></i>Lotes
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_estoque' %}">
+                                        <i class="fas fa-warehouse me-2"></i>Estoque Geral
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'distribuir_vacinas' %}">
+                                        <i class="fas fa-truck me-2"></i>Distribuir Vacinas
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_aberturas' %}">
+                                        <i class="fas fa-clipboard-list me-2"></i>Registros de Abertura
+                                    </a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{% url 'relatorios' %}">
+                                        <i class="fas fa-chart-bar me-2"></i>Relatórios
+                                    </a></li>
+                                </ul>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="adminDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cogs me-1"></i>Administração
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'admin_cadastros' %}">
+                                        <i class="fas fa-cog me-2"></i>Configurações
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_unidades' %}">
+                                        <i class="fas fa-hospital-alt me-2"></i>Unidades de Saúde
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_tipos_imunobiologicos' %}">
+                                        <i class="fas fa-syringe me-2"></i>Tipos de Imunobiológicos
+                                    </a></li>
+                                </ul>
+                            </li>
+                        {% elif user.perfilusuario.tipo == 'GESTOR' %}
+                            <!-- Opções para gestores de UBS (acesso restrito à UBS vinculada) -->
+                            <li class="nav-item">
+                                <a class="nav-link {% if request.path == '/dashboard/' %}active{% endif %}" href="{% url 'dashboard' %}">
+                                    <i class="fas fa-tachometer-alt me-1"></i>Painel da UBS
+                                </a>
+                            </li>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle {% if 'estoque' in request.path or 'registros' in request.path %}active{% endif %}" 
+                                   href="#" id="gestaoUbsDropdown" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-hospital-alt me-1"></i>Minha UBS
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'listar_estoque' %}">
+                                        <i class="fas fa-warehouse me-2"></i>Estoque da UBS
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'registrar_abertura' %}">
+                                        <i class="fas fa-vial me-2"></i>Registrar Abertura
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'listar_aberturas' %}">
+                                        <i class="fas fa-clipboard-list me-2"></i>Histórico de Aberturas
+                                    </a></li>
+                                </ul>
+                            </li>
+                        {% endif %}
                     {% endif %}
+                    
                     <li class="nav-item">
                         <a class="nav-link {% if request.path == '/sobre/' %}active{% endif %}" href="{% url 'sobre' %}">
                             <i class="fas fa-info-circle me-1"></i>Sobre
@@ -343,13 +392,15 @@
                                 </a>
                             </li>
                             
-                            <!-- Informação da UBS vinculada -->
+                            <!-- Informação da UBS vinculada apenas para gestores -->
+                            {% if user.perfilusuario.tipo == 'GESTOR' and user.perfilusuario.unidade_gestao %}
                             <li><hr class="dropdown-divider"></li>
                             <li>
                                 <div class="dropdown-item disabled text-muted">
                                     <i class="fas fa-hospital-alt me-2"></i>UBS: {{ user.perfilusuario.unidade_gestao.nome }}
                                 </div>
                             </li>
+                            {% endif %}
                             
                             <!-- Seção de administração -->
                             {% if user.perfilusuario.tipo == 'ADMIN' %}
@@ -359,6 +410,12 @@
                             </a></li>
                             <li><a class="dropdown-item" href="{% url 'cadastrar_gestor' %}">
                                 <i class="fas fa-user-plus me-2"></i>Cadastrar Gestor
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'listar_unidades' %}">
+                                <i class="fas fa-hospital-alt me-2"></i>Unidades de Saúde
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'adicionar_unidade' %}">
+                                <i class="fas fa-plus-circle me-2"></i>Nova Unidade de Saúde
                             </a></li>
                             {% endif %}
                             

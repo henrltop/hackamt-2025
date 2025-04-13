@@ -216,9 +216,17 @@ def detalhe_lote(request, pk):
     lote = get_object_or_404(Lote, pk=pk)
     estoques = EstoqueImunobiologico.objects.filter(lote=lote)
     
+    # Calcular informações relevantes
+    doses_disponiveis = lote.quantidade_frascos_central * lote.tipo_imunobiologico.doses_por_frasco
+    frascos_distribuidos = lote.quantidade_frascos - lote.quantidade_frascos_central
+    now = timezone.now().date()
+    
     context = {
         'lote': lote,
-        'estoques': estoques
+        'estoques': estoques,
+        'doses_disponiveis': doses_disponiveis,
+        'frascos_distribuidos': frascos_distribuidos,
+        'now': now
     }
     
     return render(request, 'estoque/detalhe_lote.html', context)
@@ -282,23 +290,43 @@ def listar_estoque(request):
     elif status == 'indisponivel':
         estoques = estoques.filter(quantidade_frascos=0)
     
+    # Ordenar por validade (mais próximos do vencimento primeiro)
+    estoques = estoques.order_by('lote__data_validade', 'lote__tipo_imunobiologico__nome')
+    
+    # Anexar informações adicionais aos lotes para facilitar o template
+    now = timezone.now().date()
+    for estoque in estoques:
+        # Calcular os dias até o vencimento
+        estoque.lote.dias_ate_vencimento = (estoque.lote.data_validade - now).days
+        
+        # Não é mais necessário calcular o total_doses_disponiveis aqui
+        # Isso agora é uma property do modelo EstoqueImunobiologico
+    
     # Paginação
     paginator = Paginator(estoques, 10)  # 10 itens por página
     page_number = request.GET.get('page')
     estoques_paginados = paginator.get_page(page_number)
     
     # Obter todos os tipos de imunobiológicos para o filtro
-    tipos_imuno = TipoImunobiologico.objects.all()
+    tipos_imuno = TipoImunobiologico.objects.all().order_by('nome')
     
     # Obter todas as unidades para o filtro (apenas para admin)
     unidades = None
     if request.user.perfilusuario.tipo != 'GESTOR':
-        unidades = UnidadeSaude.objects.filter(ativa=True)
+        unidades = UnidadeSaude.objects.filter(ativa=True).order_by('nome')
+    
+    # Construir a string de consulta para a paginação
+    request_query = ''
+    for key, value in request.GET.items():
+        if key != 'page':
+            request_query += f'&{key}={value}'
     
     context = {
         'estoques': estoques_paginados,
         'tipos_imuno': tipos_imuno,
-        'unidades': unidades
+        'unidades': unidades,
+        'request_query': request_query,
+        'now': now,
     }
     
     return render(request, 'estoque/estoque.html', context)
@@ -338,6 +366,21 @@ def atualizar_estoque(request):
             estoque = form.save(commit=False)
             estoque.unidade = unidade
             
+            # VALIDAÇÃO DE SEGURANÇA: Verificar se a quantidade é válida
+            if estoque.quantidade_frascos <= 0:
+                messages.error(request, "A quantidade de frascos deve ser maior que zero.")
+                return render(request, 'estoque/atualizar_estoque.html', {'form': form, 'unidade': unidade})
+            
+            # VALIDAÇÃO DE SEGURANÇA: Verificar se o lote não está vencido
+            if estoque.lote.data_validade < timezone.now().date():
+                messages.error(request, "Não é possível adicionar lotes já vencidos.")
+                return render(request, 'estoque/atualizar_estoque.html', {'form': form, 'unidade': unidade})
+            
+            # VALIDAÇÃO DE SEGURANÇA: Verificar se há frascos suficientes no estoque central
+            if estoque.lote.quantidade_frascos_central < estoque.quantidade_frascos:
+                messages.error(request, f"Quantidade insuficiente no estoque central. Disponível: {estoque.lote.quantidade_frascos_central} frascos.")
+                return render(request, 'estoque/atualizar_estoque.html', {'form': form, 'unidade': unidade})
+            
             # Verificar se já existe estoque para este lote nesta unidade
             estoque_existente = EstoqueImunobiologico.objects.filter(
                 unidade=unidade,
@@ -353,6 +396,20 @@ def atualizar_estoque(request):
                 # Criar novo registro de estoque
                 estoque.save()
                 messages.success(request, f"Estoque criado com sucesso! {estoque.quantidade_frascos} frascos adicionados.")
+            
+            # Atualizar o estoque central
+            estoque.lote.quantidade_frascos_central -= estoque.quantidade_frascos
+            estoque.lote.save()
+            
+            # Registrar a distribuição para rastreabilidade
+            DistribuicaoLote.objects.create(
+                lote=estoque.lote,
+                unidade=unidade,
+                quantidade_frascos=estoque.quantidade_frascos,
+                data_distribuicao=timezone.now(),
+                usuario=request.user,
+                observacoes=f"Distribuição realizada via formulário de atualização de estoque."
+            )
             
             return redirect('listar_estoque')
     else:
@@ -416,7 +473,7 @@ def atualizar_estoque_unidade(request, unidade_id):
 
 @login_required
 def listar_aberturas(request):
-    # Verificar se o usuário é gestor
+    # Verificar se o usuário é gestor de estoque
     if request.user.perfilusuario.tipo == 'CIDADAO':
         messages.error(request, "Você não tem permissão para acessar esta página.")
         return redirect('home')
@@ -478,45 +535,127 @@ def listar_aberturas(request):
 
 @login_required
 def registrar_abertura(request):
-    # Verificar se o usuário é gestor
-    if request.user.perfilusuario.tipo == 'CIDADAO':
+    # Verificar se o usuário é gestor de UBS
+    if request.user.perfilusuario.tipo != 'GESTOR':
         messages.error(request, "Você não tem permissão para acessar esta página.")
         return redirect('home')
     
     # Obter unidade do gestor
-    if request.user.perfilusuario.tipo == 'GESTOR':
-        unidade = request.user.perfilusuario.unidade_gestao
-        if not unidade:
-            messages.warning(request, "Você não está associado a nenhuma unidade de saúde.")
-            return redirect('home')
-    else:
-        # Para administradores, mostrar todas as unidades
-        unidade = None
-        if request.method != 'POST':
-            unidades = UnidadeSaude.objects.filter(ativa=True)
-            return render(request, 'estoque/selecionar_unidade.html', {'unidades': unidades, 'acao': 'registrar_abertura'})
+    unidade = request.user.perfilusuario.unidade_gestao
+    if not unidade:
+        messages.warning(request, "Você não está associado a nenhuma unidade de saúde.")
+        return redirect('home')
     
-    # Processar o formulário se for POST
+    # Se um estoque específico foi fornecido na URL
+    estoque_id = request.GET.get('estoque')
+    estoque_selecionado = None
+    
+    if estoque_id:
+        try:
+            estoque_selecionado = EstoqueImunobiologico.objects.get(
+                id=estoque_id,
+                unidade=unidade,
+                quantidade_frascos__gt=0,
+                lote__data_validade__gte=timezone.now().date()
+            )
+        except EstoqueImunobiologico.DoesNotExist:
+            messages.error(request, "Estoque selecionado não existe ou não está disponível.")
+            estoque_selecionado = None
+    
+    # Obter tipos de imunobiológicos disponíveis na UBS
+    tipos_imuno = TipoImunobiologico.objects.filter(
+        lote__estoqueimunobiologico__unidade=unidade,
+        lote__estoqueimunobiologico__quantidade_frascos__gt=0,
+        lote__data_validade__gte=timezone.now().date()
+    ).distinct().order_by('nome')
+    
     if request.method == 'POST':
-        # Se admin, obter a unidade selecionada
-        if request.user.perfilusuario.tipo != 'GESTOR':
-            unidade_id = request.POST.get('unidade')
-            if not unidade_id:
-                messages.error(request, "Por favor, selecione uma unidade.")
-                return redirect('registrar_abertura')
-            unidade = get_object_or_404(UnidadeSaude, pk=unidade_id)
+        # Extrair dados do formulário
+        estoque_id = request.POST.get('estoque_id')
+        data_hora_abertura = request.POST.get('data_hora_abertura')
+        responsavel = request.POST.get('responsavel')
+        doses_aplicadas_imediatas = int(request.POST.get('doses_aplicadas_imediatas', 0))
+        motivo_abertura = request.POST.get('motivo_abertura')
+        outro_motivo = request.POST.get('outro_motivo', '')
+        observacoes = request.POST.get('observacoes', '')
         
-        form = RegistroAberturaForm(request.POST, unidade=unidade)
-        if form.is_valid():
-            registro = form.save()
-            messages.success(request, f"Abertura de frasco registrada com sucesso!")
-            return redirect('listar_aberturas')
-    else:
-        form = RegistroAberturaForm(unidade=unidade)
+        # VALIDAÇÃO DE SEGURANÇA: Verificar se todos os campos obrigatórios estão preenchidos
+        if not all([estoque_id, data_hora_abertura, responsavel, motivo_abertura]):
+            messages.error(request, "Todos os campos obrigatórios devem ser preenchidos.")
+            return redirect('registrar_abertura')
+        
+        # Obter o estoque
+        try:
+            estoque = EstoqueImunobiologico.objects.get(pk=estoque_id)
+        except EstoqueImunobiologico.DoesNotExist:
+            messages.error(request, "Estoque não encontrado.")
+            return redirect('registrar_abertura')
+        
+        # VALIDAÇÃO DE SEGURANÇA: Verificar se pertence à unidade do gestor
+        if estoque.unidade != unidade:
+            messages.error(request, "Você não tem permissão para manipular este estoque.")
+            return redirect('registrar_abertura')
+        
+        # VALIDAÇÃO DE SEGURANÇA: Verificar se ainda há frascos disponíveis
+        if estoque.quantidade_frascos <= 0:
+            messages.error(request, "Não há frascos disponíveis neste lote.")
+            return redirect('registrar_abertura')
+        
+        # VALIDAÇÃO DE SEGURANÇA: Verificar se o lote não está vencido
+        if estoque.lote.data_validade < timezone.now().date():
+            messages.error(request, "Não é possível abrir frascos de lotes vencidos.")
+            return redirect('registrar_abertura')
+        
+        # VALIDAÇÃO DE SEGURANÇA: Verificar se as doses aplicadas imediatas não excedem o máximo do frasco
+        if doses_aplicadas_imediatas > estoque.lote.tipo_imunobiologico.doses_por_frasco:
+            messages.error(request, f"O número de doses aplicadas não pode exceder o máximo por frasco ({estoque.lote.tipo_imunobiologico.doses_por_frasco}).")
+            return redirect('registrar_abertura')
+        
+        # Montar descrição do motivo
+        if motivo_abertura == 'OUTRO':
+            motivo_descricao = outro_motivo
+        else:
+            motivos_dict = {
+                'DEMANDA': 'Atendimento de demanda',
+                'CAMPANHA': 'Campanha de vacinação',
+                'AGENDAMENTO': 'Agendamento prévio'
+            }
+            motivo_descricao = motivos_dict.get(motivo_abertura, motivo_abertura)
+        
+        # Registrar a abertura com transação para garantir integridade
+        try:
+            with transaction.atomic():
+                # Registrar a abertura
+                abertura = RegistroAbertura.objects.create(
+                    estoque=estoque,
+                    data_hora_abertura=data_hora_abertura,
+                    responsavel=responsavel,
+                    doses_utilizadas=doses_aplicadas_imediatas,
+                    doses_perdidas=0,  # Inicialmente não há doses perdidas
+                    motivo=motivo_descricao,
+                    observacoes=observacoes,
+                    usuario=request.user
+                )
+                
+                # Reduzir a quantidade de frascos disponíveis
+                estoque.quantidade_frascos -= 1
+                estoque.save()
+                
+                messages.success(request, "Abertura de frasco registrada com sucesso!")
+                
+                # Se houve aplicações imediatas, redirecionar para registrar as aplicações
+                if doses_aplicadas_imediatas > 0:
+                    return redirect('registrar_aplicacao_abertura', abertura_id=abertura.id)
+                
+                return redirect('listar_aberturas')
+        except Exception as e:
+            messages.error(request, f"Erro ao registrar abertura: {str(e)}")
+            return redirect('registrar_abertura')
     
     context = {
-        'form': form,
-        'unidade': unidade
+        'tipos_imuno': tipos_imuno,
+        'unidade': unidade,
+        'estoque_selecionado': estoque_selecionado
     }
     
     return render(request, 'estoque/registro_abertura.html', context)
@@ -617,6 +756,17 @@ def salvar_distribuicao(request):
         # Obter o lote
         lote = get_object_or_404(Lote, pk=lote_id)
         
+        # Calcular total a ser distribuído
+        total_distribuir = 0
+        for key, value in request.POST.items():
+            if key.startswith('quantidade_') and int(value) > 0:
+                total_distribuir += int(value)
+        
+        # Verificar se há frascos suficientes
+        if total_distribuir > lote.quantidade_frascos_central:
+            messages.error(request, f"Quantidade insuficiente no estoque central. Disponível: {lote.quantidade_frascos_central} frascos.")
+            return redirect('distribuir_vacinas')
+        
         # Registrar distribuições para cada UBS
         distribuicoes_realizadas = 0
         
@@ -659,8 +809,11 @@ def salvar_distribuicao(request):
                 distribuicoes_realizadas += 1
         
         # Reduzir a quantidade do estoque central
-        lote.quantidade_frascos_central -= sum([int(v) for k, v in request.POST.items() if k.startswith('quantidade_') and int(v) > 0])
+        lote.quantidade_frascos_central -= total_distribuir
         lote.save()
+        
+        # Atualizar quantidade total
+        lote.atualizar_quantidade_total()
         
         if distribuicoes_realizadas > 0:
             messages.success(request, f"Distribuição realizada com sucesso para {distribuicoes_realizadas} unidades de saúde!")
@@ -890,10 +1043,6 @@ def api_estoque_ubs_por_lote(request, lote_id):
         logger.error(traceback.format_exc())
         return JsonResponse({'error': str(e)}, status=500)
 
-def relatorios(request):
-    # Seu código para a view de relatórios aqui
-    return render(request, 'estoque/relatorios.html')
-
 @login_required
 def relatorios(request):
     # Verificar se o usuário tem permissão
@@ -910,12 +1059,19 @@ def relatorio_estoque(request):
         messages.error(request, "Você não tem permissão para acessar esta página.")
         return redirect('home')
     
+    # Filtrar por tipo de imunobiológico se fornecido
+    vacina_id = request.GET.get('vacina')
+    
     # Gerar dados para o relatório
     if request.user.perfilusuario.tipo == 'GESTOR':
         unidade = request.user.perfilusuario.unidade_gestao
         estoques = EstoqueImunobiologico.objects.filter(unidade=unidade)
+        if vacina_id:
+            estoques = estoques.filter(lote__tipo_imunobiologico_id=vacina_id)
     else:
         estoques = EstoqueImunobiologico.objects.all()
+        if vacina_id:
+            estoques = estoques.filter(lote__tipo_imunobiologico_id=vacina_id)
     
     # Agrupar por tipo de imunobiológico
     dados_estoque = {}
@@ -934,7 +1090,7 @@ def relatorio_estoque(request):
             }
         
         dados_estoque[tipo.id]['frascos'] += estoque.quantidade_frascos
-        dados_estoque[tipo.id]['doses'] += estoque.total_doses_disponiveis
+        dados_estoque[tipo.id]['doses'] += estoque.quantidade_frascos * tipo.doses_por_frasco
         dados_estoque[tipo.id]['lotes'].add(estoque.lote.numero_lote)
     
     # Converter para lista para o template
@@ -954,10 +1110,95 @@ def relatorio_estoque(request):
         'dados_relatorio': dados_relatorio,
         'data_geracao': timezone.now(),
         'total_frascos': sum(item['frascos'] for item in dados_relatorio),
-        'total_doses': sum(item['doses'] for item in dados_relatorio)
+        'total_doses': sum(item['doses'] for item in dados_relatorio),
+        'filtro_vacina': TipoImunobiologico.objects.filter(id=vacina_id).first() if vacina_id else None,
     }
     
     return render(request, 'estoque/relatorio_estoque.html', context)
+
+# Adicionando novo método para relatório por UBS específica
+@login_required
+def relatorio_estoque_unidade(request, unidade_id):
+    # Verificar se o usuário é administrador
+    if request.user.perfilusuario.tipo != 'ADMIN':
+        messages.error(request, "Você não tem permissão para acessar esta página.")
+        return redirect('home')
+    
+    # Obter a unidade
+    unidade = get_object_or_404(UnidadeSaude, pk=unidade_id)
+    
+    # Obter todos os estoques desta unidade
+    estoques = EstoqueImunobiologico.objects.filter(unidade=unidade)
+    
+    # Agrupar por tipo de imunobiológico
+    dados_estoque = {}
+    
+    for estoque in estoques:
+        tipo = estoque.lote.tipo_imunobiologico
+        
+        if tipo.id not in dados_estoque:
+            dados_estoque[tipo.id] = {
+                'nome': tipo.nome,
+                'fabricante': tipo.fabricante,
+                'doses_por_frasco': tipo.doses_por_frasco,
+                'frascos': 0,
+                'doses': 0,
+                'lotes': set(),
+                'vencendo_em_30_dias': 0
+            }
+        
+        dados_estoque[tipo.id]['frascos'] += estoque.quantidade_frascos
+        dados_estoque[tipo.id]['doses'] += estoque.quantidade_frascos * tipo.doses_por_frasco
+        dados_estoque[tipo.id]['lotes'].add(estoque.lote.numero_lote)
+        
+        # Verificar se está vencendo em 30 dias
+        if (estoque.lote.data_validade - timezone.now().date()).days <= 30:
+            dados_estoque[tipo.id]['vencendo_em_30_dias'] += estoque.quantidade_frascos
+    
+    # Converter para lista para o template
+    dados_relatorio = [
+        {
+            'nome': dados['nome'],
+            'fabricante': dados['fabricante'],
+            'doses_por_frasco': dados['doses_por_frasco'],
+            'frascos': dados['frascos'],
+            'doses': dados['doses'],
+            'lotes': len(dados['lotes']),
+            'vencendo_em_30_dias': dados['vencendo_em_30_dias']
+        }
+        for tipo_id, dados in dados_estoque.items()
+    ]
+    
+    # Coletar histórico de aberturas dos últimos 30 dias
+    aberturas = RegistroAbertura.objects.filter(
+        estoque__unidade=unidade,
+        data_hora_abertura__gte=timezone.now() - timezone.timedelta(days=30)
+    ).order_by('-data_hora_abertura')
+    
+    # Calcular estatísticas de aberturas
+    total_aberturas = aberturas.count()
+    total_doses_aplicadas = aberturas.aggregate(Sum('doses_utilizadas'))['doses_utilizadas__sum'] or 0
+    total_doses_perdidas = aberturas.aggregate(Sum('doses_perdidas'))['doses_perdidas__sum'] or 0
+    
+    if total_aberturas > 0:
+        eficiencia = round((total_doses_aplicadas / (total_doses_aplicadas + total_doses_perdidas)) * 100, 2) if (total_doses_aplicadas + total_doses_perdidas) > 0 else 0
+    else:
+        eficiencia = 0
+    
+    context = {
+        'unidade': unidade,
+        'dados_relatorio': dados_relatorio,
+        'data_geracao': timezone.now(),
+        'total_frascos': sum(item['frascos'] for item in dados_relatorio),
+        'total_doses': sum(item['doses'] for item in dados_relatorio),
+        'total_aberturas': total_aberturas,
+        'total_doses_aplicadas': total_doses_aplicadas,
+        'total_doses_perdidas': total_doses_perdidas,
+        'eficiencia': eficiencia,
+        'tipo_relatorio': 'unidade'
+    }
+    
+    return render(request, 'estoque/relatorio_estoque_unidade.html', context)
 
 @login_required
 def relatorio_distribuicao(request):
@@ -1104,3 +1345,29 @@ def editar_tipo_imunobiologico(request, pk):
     }
     
     return render(request, 'estoque/tipo_imunobiologico_form.html', context)
+
+@login_required
+def api_lote_info(request, lote_id):
+    """API para obter informações detalhadas de um lote específico"""
+    try:
+        lote = get_object_or_404(Lote, pk=lote_id)
+        
+        # Preparar dados para JSON
+        dados_lote = {
+            'id': lote.id,
+            'numero_lote': lote.numero_lote,
+            'data_fabricacao': lote.data_fabricacao.strftime('%d/%m/%Y'),
+            'data_validade': lote.data_validade.strftime('%d/%m/%Y'),
+            'quantidade_frascos': lote.quantidade_frascos,
+            'quantidade_frascos_central': lote.quantidade_frascos_central,
+            'tipo_imunobiologico': {
+                'id': lote.tipo_imunobiologico.id,
+                'nome': lote.tipo_imunobiologico.nome,
+                'fabricante': lote.tipo_imunobiologico.fabricante,
+                'doses_por_frasco': lote.tipo_imunobiologico.doses_por_frasco
+            }
+        }
+        
+        return JsonResponse(dados_lote)
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)

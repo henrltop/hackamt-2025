@@ -203,6 +203,14 @@
                 </div>
                 <div class="card-footer">
                     <a href="{% url 'listar_estoque' %}" class="btn btn-sm btn-outline-info">Gerenciar estoque</a>
+                    {% if user.perfilusuario.tipo == 'ADMIN' %}
+                    <a href="{% url 'listar_unidades' %}" class="btn btn-sm btn-outline-primary">
+                        <i class="fas fa-hospital-alt me-1"></i>Ver unidades
+                    </a>
+                    <a href="{% url 'adicionar_unidade' %}" class="btn btn-sm btn-outline-success">
+                        <i class="fas fa-plus-circle me-1"></i>Nova unidade
+                    </a>
+                    {% endif %}
                 </div>
             </div>
         </div>

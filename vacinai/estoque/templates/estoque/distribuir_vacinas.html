@@ -1,339 +1,387 @@
 {% extends 'base.html' %}
-{% load crispy_forms_tags %}
+{% load static %}
 
-{% block title %}Distribuição de Vacinas - Vacinaí{% endblock %}
+{% block title %}Distribuir Vacinas - Vacinaí{% endblock %}
 
 {% block content %}
-<div class="container">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Distribuição de Vacinas para UBSs</h1>
-        <a href="{% url 'admin_cadastros' %}" class="btn btn-outline-secondary">
-            <i class="fas fa-arrow-left me-2"></i>Voltar
-        </a>
-    </div>
-
-    <div class="card mb-4">
-        <div class="card-header bg-primary text-white">
-            <h5 class="mb-0">Selecionar Lote para Distribuição</h5>
+<div class="container-fluid">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h2 class="mb-3">Distribuir Vacinas</h2>
+            <p class="text-muted">Distribua vacinas do estoque central para as unidades de saúde.</p>
         </div>
-        <div class="card-body">
-            <form method="post" id="form-selecionar-lote">
-                {% csrf_token %}
-                <div class="row">
-                    <div class="col-md-6">
-                        <div class="form-group mb-3">
-                            <label for="tipo_imunobiologico" class="form-label">Tipo de Vacina:</label>
-                            <select name="tipo_imunobiologico" id="tipo_imunobiologico" class="form-select" required>
-                                <option value="">Selecione uma vacina</option>
-                                {% for tipo in tipos_imuno %}
-                                <option value="{{ tipo.id }}">{{ tipo.nome }} - {{ tipo.fabricante }}</option>
-                                {% endfor %}
-                            </select>
-                        </div>
-                    </div>
-                    <div class="col-md-6">
-                        <div class="form-group mb-3">
-                            <label for="lote" class="form-label">Lote:</label>
-                            <select name="lote" id="lote" class="form-select" required disabled>
-                                <option value="">Selecione um lote</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="quantidade_total" class="form-label">Quantidade em Estoque:</label>
-                            <input type="text" id="quantidade_total" class="form-control" readonly>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="validade" class="form-label">Data de Validade:</label>
-                            <input type="text" id="validade" class="form-control" readonly>
-                        </div>
-                    </div>
-                    <div class="col-md-4">
-                        <div class="form-group mb-3">
-                            <label for="doses_por_frasco" class="form-label">Doses por Frasco:</label>
-                            <input type="text" id="doses_por_frasco" class="form-control" readonly>
-                        </div>
-                    </div>
-                </div>
-                <div class="d-grid mt-3">
-                    <button type="button" id="btn-continuar" class="btn btn-primary" disabled>Continuar para Distribuição</button>
-                </div>
-            </form>
+        <div class="col-md-4 text-md-end">
+            <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-2"></i>Voltar
+            </a>
         </div>
     </div>
 
-    <div class="card mb-4" id="card-distribuicao" style="display: none;">
-        <div class="card-header bg-success text-white">
-            <h5 class="mb-0">Distribuir para UBSs</h5>
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-primary text-white py-3">
+            <h5 class="mb-0 fw-bold"><i class="fas fa-truck me-2"></i>Distribuição de Vacinas</h5>
         </div>
-        <div class="card-body">
-            <form method="post" action="{% url 'salvar_distribuicao' %}" id="form-distribuicao">
+        <div class="card-body p-4">
+            <form id="formDistribuicao" method="post" action="{% url 'salvar_distribuicao' %}">
                 {% csrf_token %}
-                <input type="hidden" name="lote_id" id="lote_id">
-                <div class="row mb-3">
-                    <div class="col-12">
-                        <div class="alert alert-info">
-                            <h5 class="alert-heading">Informações do Lote</h5>
-                            <p><strong>Vacina:</strong> <span id="info-vacina"></span></p>
-                            <p><strong>Lote:</strong> <span id="info-lote"></span></p>
-                            <p><strong>Validade:</strong> <span id="info-validade"></span></p>
-                            <p><strong>Quantidade disponível:</strong> <span id="info-quantidade"></span> frascos (<span id="info-doses"></span> doses)</p>
-                        </div>
-                    </div>
-                </div>
                 
-                <div class="table-responsive">
-                    <table class="table table-bordered table-hover" id="tabela-distribuicao">
-                        <thead class="table-primary">
-                            <tr>
-                                <th>UBS</th>
-                                <th>Endereço</th>
-                                <th>Quantidade atual</th>
-                                <th>Quantidade a distribuir</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for ubs in unidades_saude %}
-                            <tr>
-                                <td>{{ ubs.nome }}</td>
-                                <td>{{ ubs.endereco }}, {{ ubs.bairro.nome }}</td>
-                                <td id="atual-{{ ubs.id }}">0</td>
-                                <td>
-                                    <div class="input-group">
-                                        <input type="number" name="quantidade_{{ ubs.id }}" id="quantidade_{{ ubs.id }}" class="form-control quantidade-distribuir" min="0" value="0">
-                                        <span class="input-group-text">frascos</span>
-                                    </div>
-                                </td>
-                            </tr>
+                <div class="row mb-4">
+                    <div class="col-md-6">
+                        <label for="tipo_imunobiologico" class="form-label">Tipo de Imunobiológico</label>
+                        <select id="tipo_imunobiologico" class="form-select" required>
+                            <option value="">Selecione a vacina...</option>
+                            {% for tipo in tipos_imuno %}
+                                <option value="{{ tipo.id }}">{{ tipo.nome }} ({{ tipo.fabricante }})</option>
                             {% endfor %}
-                        </tbody>
-                        <tfoot>
-                            <tr class="table-info">
-                                <th colspan="3" class="text-end">Total a distribuir:</th>
-                                <th id="total-distribuicao">0 frascos</th>
-                            </tr>
-                            <tr class="table-warning">
-                                <th colspan="3" class="text-end">Restante no estoque central:</th>
-                                <th id="restante-estoque">0 frascos</th>
-                            </tr>
-                        </tfoot>
-                    </table>
+                        </select>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label for="lote" class="form-label">Lote</label>
+                        <select id="lote" name="lote_id" class="form-select" required disabled>
+                            <option value="">Selecione primeiro a vacina...</option>
+                        </select>
+                        <div class="form-text" id="lote_info"></div>
+                    </div>
                 </div>
                 
-                <div class="row mt-3">
-                    <div class="col-12">
-                        <div class="form-group">
-                            <label for="observacoes" class="form-label">Observações:</label>
-                            <textarea name="observacoes" id="observacoes" class="form-control" rows="3"></textarea>
+                <div id="infoLote" class="alert alert-info d-none">
+                    <div class="d-flex align-items-center">
+                        <div>
+                            <h5 id="infoLoteTitle" class="alert-heading"></h5>
+                            <ul class="mb-0">
+                                <li><strong>Validade:</strong> <span id="infoLoteValidade"></span></li>
+                                <li><strong>Frascos disponíveis:</strong> <span id="infoLoteFrascos"></span></li>
+                                <li><strong>Doses por frasco:</strong> <span id="infoLoteDoses"></span></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
                 
-                <div class="row mt-3">
-                    <div class="col-md-6">
-                        <button type="button" id="btn-voltar" class="btn btn-secondary w-100">Voltar</button>
+                <div id="unidadesContainer" class="d-none mt-4">
+                    <h5 class="mb-3">Unidades de Saúde</h5>
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        <span>Informe a quantidade de frascos a ser distribuída para cada unidade.</span>
                     </div>
-                    <div class="col-md-6">
-                        <button type="submit" id="btn-confirmar" class="btn btn-success w-100">Confirmar Distribuição</button>
+                    
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Unidade</th>
+                                    <th>Município</th>
+                                    <th>Estoque Atual</th>
+                                    <th style="width: 200px;">Quantidade a Distribuir</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for unidade in unidades_saude %}
+                                <tr>
+                                    <td>{{ unidade.nome }}</td>
+                                    <td>{{ unidade.municipio.nome }}/{{ unidade.municipio.uf }}</td>
+                                    <td id="estoque_atual_{{ unidade.id }}">-</td>
+                                    <td>
+                                        <div class="input-group">
+                                            <input 
+                                                type="number" 
+                                                name="quantidade_{{ unidade.id }}" 
+                                                id="quantidade_{{ unidade.id }}" 
+                                                class="form-control quantidade-input" 
+                                                min="0" 
+                                                value="0"
+                                                disabled
+                                            >
+                                            <span class="input-group-text">frascos</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr class="table-light">
+                                    <th colspan="2">Total</th>
+                                    <td>-</td>
+                                    <td>
+                                        <div class="input-group">
+                                            <input type="text" id="total_distribuir" class="form-control" readonly value="0">
+                                            <span class="input-group-text">frascos</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
                     </div>
+                </div>
+                
+                <div class="mb-3 mt-4">
+                    <label for="observacoes" class="form-label">Observações</label>
+                    <textarea name="observacoes" id="observacoes" class="form-control" rows="3"></textarea>
+                </div>
+                
+                <div class="d-flex justify-content-end gap-2 mt-4">
+                    <a href="{% url 'dashboard' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-times me-1"></i>Cancelar
+                    </a>
+                    <button type="submit" class="btn btn-primary" id="btnDistribuir" disabled>
+                        <i class="fas fa-truck me-1"></i>Distribuir Vacinas
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 </div>
-{% endblock %}
 
 {% block extra_js %}
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Quando o tipo de imunobiológico é selecionado, carrega os lotes disponíveis
-        document.getElementById('tipo_imunobiologico').addEventListener('change', function() {
+        const tipoImunobiologicoSelect = document.getElementById('tipo_imunobiologico');
+        const loteSelect = document.getElementById('lote');
+        const loteInfo = document.getElementById('lote_info');
+        const infoLote = document.getElementById('infoLote');
+        const infoLoteTitle = document.getElementById('infoLoteTitle');
+        const infoLoteValidade = document.getElementById('infoLoteValidade');
+        const infoLoteFrascos = document.getElementById('infoLoteFrascos');
+        const infoLoteDoses = document.getElementById('infoLoteDoses');
+        const unidadesContainer = document.getElementById('unidadesContainer');
+        const totalDistribuir = document.getElementById('total_distribuir');
+        const btnDistribuir = document.getElementById('btnDistribuir');
+        const quantidadeInputs = document.querySelectorAll('.quantidade-input');
+        
+        // Parâmetros da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const loteParam = urlParams.get('lote');
+        
+        let loteAtual = null;
+        let frascosTotais = 0;
+        
+        // Carregar lotes quando selecionar tipo de imunobiológico
+        tipoImunobiologicoSelect.addEventListener('change', function() {
             const tipoId = this.value;
+            
+            // Resetar formulário
+            resetForm();
+            
             if (tipoId) {
-                // Habilitar select de lotes
-                const loteSelect = document.getElementById('lote');
+                // Habilitar select de lote
                 loteSelect.disabled = false;
-                loteSelect.innerHTML = '<option value="">Carregando lotes...</option>';
+                loteSelect.innerHTML = '<option value="">Carregando...</option>';
                 
-                console.log("Buscando lotes para o tipo ID:", tipoId);
-                
-                // Buscar lotes via API
+                // Buscar lotes deste tipo
                 fetch(`/estoque/api/lotes-por-tipo/${tipoId}/`)
-                    .then(response => {
-                        console.log("Status da resposta:", response.status);
-                        if (!response.ok) {
-                            throw new Error('Erro ao carregar lotes. Status: ' + response.status);
-                        }
-                        return response.json();
-                    })
+                    .then(response => response.json())
                     .then(data => {
-                        console.log("Dados recebidos:", data);
-                        loteSelect.innerHTML = '<option value="">Selecione um lote</option>';
-                        
-                        if (!Array.isArray(data)) {
-                            console.error("Dados recebidos não são um array:", data);
-                            loteSelect.innerHTML = '<option value="">Erro no formato dos dados</option>';
-                            loteSelect.disabled = true;
+                        if (data.length === 0) {
+                            loteSelect.innerHTML = '<option value="">Nenhum lote disponível</option>';
+                            loteInfo.textContent = 'Não há lotes disponíveis para este tipo de vacina.';
                             return;
                         }
                         
-                        if (data.length === 0) {
-                            console.log("Nenhum lote encontrado para este tipo");
-                            loteSelect.innerHTML = '<option value="">Nenhum lote disponível</option>';
-                            loteSelect.disabled = true;
-                        } else {
-                            data.forEach(lote => {
-                                if (!lote || !lote.numero_lote) {
-                                    console.error("Lote inválido:", lote);
-                                    return;
-                                }
-                                
-                                console.log("Adicionando lote:", lote.numero_lote, "com", lote.quantidade_frascos, "frascos");
-                                
-                                const option = document.createElement('option');
-                                option.value = lote.id;
-                                option.textContent = `${lote.numero_lote} - ${lote.quantidade_frascos} frascos`;
-                                option.dataset.quantidade = lote.quantidade_frascos;
-                                option.dataset.validade = lote.data_validade;
-                                option.dataset.doses = lote.tipo_imunobiologico.doses_por_frasco;
-                                option.dataset.vacina = lote.tipo_imunobiologico.nome;
-                                option.dataset.fabricante = lote.tipo_imunobiologico.fabricante;
-                                loteSelect.appendChild(option);
-                            });
-                        }
+                        loteSelect.innerHTML = '<option value="">Selecione o lote...</option>';
+                        
+                        data.forEach(lote => {
+                            const option = document.createElement('option');
+                            option.value = lote.id;
+                            option.textContent = `${lote.numero_lote} (Val: ${lote.data_validade} - ${lote.quantidade_frascos} frascos)`;
+                            
+                            // Adicionar dados do lote ao elemento para uso posterior
+                            option.dataset.numero = lote.numero_lote;
+                            option.dataset.validade = lote.data_validade;
+                            option.dataset.frascos = lote.quantidade_frascos;
+                            option.dataset.doses = lote.tipo_imunobiologico.doses_por_frasco;
+                            option.dataset.vacina = lote.tipo_imunobiologico.nome;
+                            
+                            loteSelect.appendChild(option);
+                            
+                            // Se houver lote na URL, selecionar automaticamente
+                            if (loteParam && loteParam == lote.id) {
+                                option.selected = true;
+                                loteSelect.dispatchEvent(new Event('change'));
+                            }
+                        });
+                        
+                        loteInfo.textContent = `${data.length} lote(s) disponível(is)`;
                     })
                     .catch(error => {
                         console.error('Erro ao carregar lotes:', error);
                         loteSelect.innerHTML = '<option value="">Erro ao carregar lotes</option>';
-                        loteSelect.disabled = true;
-                        alert('Ocorreu um erro ao carregar os lotes: ' + error.message);
+                        loteInfo.textContent = 'Ocorreu um erro ao carregar os lotes.';
                     });
             } else {
-                // Se nenhum tipo selecionado, desabilitar select de lotes
-                const loteSelect = document.getElementById('lote');
+                // Resetar select de lote
                 loteSelect.disabled = true;
-                loteSelect.innerHTML = '<option value="">Selecione um lote</option>';
+                loteSelect.innerHTML = '<option value="">Selecione primeiro a vacina...</option>';
+                loteInfo.textContent = '';
             }
         });
         
-        // Quando o lote é selecionado, exibe informações e habilita botão de continuar
-        document.getElementById('lote').addEventListener('change', function() {
+        // Quando selecionar um lote
+        loteSelect.addEventListener('change', function() {
             const loteId = this.value;
+            
+            resetDistribuicao();
+            
             if (loteId) {
                 const option = this.options[this.selectedIndex];
-                document.getElementById('quantidade_total').value = option.dataset.quantidade + ' frascos';
-                document.getElementById('validade').value = option.dataset.validade;
-                document.getElementById('doses_por_frasco').value = option.dataset.doses + ' doses';
                 
-                // Habilitar botão de continuar
-                document.getElementById('btn-continuar').disabled = false;
-            } else {
-                document.getElementById('quantidade_total').value = '';
-                document.getElementById('validade').value = '';
-                document.getElementById('doses_por_frasco').value = '';
+                // Exibir informações do lote
+                infoLote.classList.remove('d-none');
+                infoLoteTitle.textContent = `${option.dataset.vacina} - Lote ${option.dataset.numero}`;
+                infoLoteValidade.textContent = option.dataset.validade;
+                infoLoteFrascos.textContent = option.dataset.frascos;
+                infoLoteDoses.textContent = option.dataset.doses;
                 
-                // Desabilitar botão de continuar
-                document.getElementById('btn-continuar').disabled = true;
-            }
-        });
-        
-        // Botão de continuar para distribuição
-        document.getElementById('btn-continuar').addEventListener('click', function() {
-            const loteSelect = document.getElementById('lote');
-            const option = loteSelect.options[loteSelect.selectedIndex];
-            
-            // Preencher informações no formulário de distribuição
-            document.getElementById('lote_id').value = loteSelect.value;
-            document.getElementById('info-vacina').textContent = option.dataset.vacina + ' (' + option.dataset.fabricante + ')';
-            document.getElementById('info-lote').textContent = loteSelect.options[loteSelect.selectedIndex].text.split(' - ')[0];
-            document.getElementById('info-validade').textContent = option.dataset.validade;
-            document.getElementById('info-quantidade').textContent = option.dataset.quantidade;
-            document.getElementById('info-doses').textContent = option.dataset.quantidade * option.dataset.doses;
-            
-            // Mostrar formulário de distribuição
-            document.getElementById('card-distribuicao').style.display = 'block';
-            
-            // Obter informações atuais de estoque das UBSs
-            fetch(`/estoque/api/estoque-ubs-por-lote/${loteSelect.value}/`)
-                .then(response => {
-                    if (!response.ok) {
-                        throw new Error('Erro ao carregar estoques. Status: ' + response.status);
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Preencher quantidade atual para cada UBS
-                    data.forEach(item => {
-                        const cel = document.getElementById('atual-' + item.unidade_id);
-                        if (cel) {
-                            cel.textContent = item.quantidade_frascos;
-                        }
+                // Armazenar informações do lote atual
+                loteAtual = {
+                    id: loteId,
+                    frascos: parseInt(option.dataset.frascos)
+                };
+                frascosTotais = loteAtual.frascos;
+                
+                // Buscar estoque atual nas unidades
+                fetch(`/estoque/api/estoque-ubs-por-lote/${loteId}/`)
+                    .then(response => response.json())
+                    .then(data => {
+                        // Preencher o estoque atual para cada unidade
+                        data.forEach(estoque => {
+                            const estoqueAtualElement = document.getElementById(`estoque_atual_${estoque.unidade_id}`);
+                            if (estoqueAtualElement) {
+                                estoqueAtualElement.textContent = `${estoque.quantidade_frascos} frascos`;
+                            }
+                        });
+                        
+                        // Mostrar container de unidades
+                        unidadesContainer.classList.remove('d-none');
+                        
+                        // Habilitar inputs de quantidade
+                        quantidadeInputs.forEach(input => {
+                            input.disabled = false;
+                            input.max = frascosTotais;
+                        });
+                        
+                        // Habilitar botão de distribuir
+                        btnDistribuir.disabled = false;
+                    })
+                    .catch(error => {
+                        console.error('Erro ao carregar estoque:', error);
                     });
-                })
-                .catch(error => {
-                    console.error('Erro ao carregar estoques:', error);
-                });
-            
-            // Inicializar contadores
-            atualizarTotais();
-            
-            // Scroll até o formulário de distribuição
-            document.getElementById('card-distribuicao').scrollIntoView({ behavior: 'smooth' });
-        });
-        
-        // Voltar para seleção de lote
-        document.getElementById('btn-voltar').addEventListener('click', function() {
-            document.getElementById('card-distribuicao').style.display = 'none';
-            document.getElementById('form-selecionar-lote').scrollIntoView({ behavior: 'smooth' });
-        });
-        
-        // Atualizar totais quando as quantidades são alteradas
-        const inputs = document.querySelectorAll('.quantidade-distribuir');
-        inputs.forEach(input => {
-            input.addEventListener('input', atualizarTotais);
-        });
-        
-        // Validar formulário antes de enviar
-        document.getElementById('form-distribuicao').addEventListener('submit', function(e) {
-            const restante = parseInt(document.getElementById('restante-estoque').dataset.restante || 0);
-            if (restante < 0) {
-                e.preventDefault();
-                alert('A quantidade total a distribuir não pode ser maior que a quantidade disponível.');
+            } else {
+                infoLote.classList.add('d-none');
+                unidadesContainer.classList.add('d-none');
+                btnDistribuir.disabled = true;
             }
         });
         
-        // Função para atualizar totais
-        function atualizarTotais() {
-            const loteSelect = document.getElementById('lote');
-            const quantidadeTotal = parseInt(loteSelect.options[loteSelect.selectedIndex].dataset.quantidade);
+        // Atualizar total ao digitar quantidades
+        document.addEventListener('input', function(e) {
+            if (e.target.classList.contains('quantidade-input')) {
+                calcularTotal();
+            }
+        });
+        
+        // Função para calcular o total
+        function calcularTotal() {
+            let total = 0;
+            let frascosSuficientes = true;
             
-            let totalDistribuir = 0;
-            document.querySelectorAll('.quantidade-distribuir').forEach(input => {
-                totalDistribuir += parseInt(input.value || 0);
+            quantidadeInputs.forEach(input => {
+                const valor = parseInt(input.value) || 0;
+                total += valor;
             });
             
-            const restante = quantidadeTotal - totalDistribuir;
+            totalDistribuir.value = total;
             
-            document.getElementById('total-distribuicao').textContent = totalDistribuir + ' frascos';
-            document.getElementById('restante-estoque').textContent = restante + ' frascos';
-            document.getElementById('restante-estoque').dataset.restante = restante;
-            
-            // Destacar se estiver distribuindo mais do que o disponível
-            if (restante < 0) {
-                document.getElementById('restante-estoque').classList.add('text-danger');
-                document.getElementById('restante-estoque').classList.remove('text-dark');
-                document.getElementById('btn-confirmar').disabled = true;
+            // Verificar se há frascos suficientes
+            if (loteAtual && total > loteAtual.frascos) {
+                frascosSuficientes = false;
+                totalDistribuir.classList.add('is-invalid');
+                btnDistribuir.disabled = true;
             } else {
-                document.getElementById('restante-estoque').classList.remove('text-danger');
-                document.getElementById('restante-estoque').classList.add('text-dark');
-                document.getElementById('btn-confirmar').disabled = false;
+                totalDistribuir.classList.remove('is-invalid');
+                btnDistribuir.disabled = total === 0;
             }
+            
+            return { total, frascosSuficientes };
         }
+        
+        // Resetar formulário
+        function resetForm() {
+            loteSelect.disabled = true;
+            loteSelect.innerHTML = '<option value="">Selecione primeiro a vacina...</option>';
+            loteInfo.textContent = '';
+            infoLote.classList.add('d-none');
+            unidadesContainer.classList.add('d-none');
+            btnDistribuir.disabled = true;
+            
+            // Limpar estoque atual
+            document.querySelectorAll('[id^="estoque_atual_"]').forEach(el => {
+                el.textContent = '-';
+            });
+            
+            // Desabilitar e zerar inputs de quantidade
+            quantidadeInputs.forEach(input => {
+                input.disabled = true;
+                input.value = 0;
+            });
+            
+            totalDistribuir.value = 0;
+        }
+        
+        // Resetar apenas a parte de distribuição
+        function resetDistribuicao() {
+            unidadesContainer.classList.add('d-none');
+            btnDistribuir.disabled = true;
+            
+            // Limpar estoque atual
+            document.querySelectorAll('[id^="estoque_atual_"]').forEach(el => {
+                el.textContent = '-';
+            });
+            
+            // Desabilitar e zerar inputs de quantidade
+            quantidadeInputs.forEach(input => {
+                input.disabled = true;
+                input.value = 0;
+            });
+            
+            totalDistribuir.value = 0;
+        }
+        
+        // Se houver um parâmetro de lote na URL, selecionar o tipo correspondente
+        if (loteParam) {
+            // Primeiro precisamos buscar o lote para saber seu tipo
+            fetch(`/estoque/api/lote-info/${loteParam}/`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data && data.tipo_imunobiologico) {
+                        // Selecionar o tipo imunobiológico
+                        tipoImunobiologicoSelect.value = data.tipo_imunobiologico.id;
+                        tipoImunobiologicoSelect.dispatchEvent(new Event('change'));
+                    }
+                })
+                .catch(error => {
+                    console.error('Erro ao carregar informações do lote:', error);
+                });
+        }
+        
+        // Validar formulário antes de enviar
+        document.getElementById('formDistribuicao').addEventListener('submit', function(e) {
+            const { total, frascosSuficientes } = calcularTotal();
+            
+            if (total === 0) {
+                e.preventDefault();
+                alert('Por favor, informe a quantidade de frascos a ser distribuída.');
+                return false;
+            }
+            
+            if (!frascosSuficientes) {
+                e.preventDefault();
+                alert('A quantidade total a ser distribuída excede o estoque disponível.');
+                return false;
+            }
+            
+            return true;
+        });
     });
 </script>
+{% endblock %}
 {% endblock %}

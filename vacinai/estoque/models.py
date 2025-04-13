@@ -56,13 +56,27 @@ class Lote(models.Model):
         delta = self.data_validade - timezone.now().date()
         return delta.days
     
+    def atualizar_quantidade_total(self):
+        """Atualiza a quantidade_frascos com base nas distribuições e estoque central"""
+        from django.db.models import Sum
+        
+        total_distribuido = EstoqueImunobiologico.objects.filter(
+            lote=self
+        ).aggregate(Sum('quantidade_frascos'))['quantidade_frascos__sum'] or 0
+        
+        # Quantidade total = central + distribuído
+        self.quantidade_frascos = self.quantidade_frascos_central + total_distribuido
+        self.save(update_fields=['quantidade_frascos'])
+        
+        return self.quantidade_frascos
+    
     class Meta:
         ordering = ['data_validade']
 
 class EstoqueImunobiologico(models.Model):
     unidade = models.ForeignKey(UnidadeSaude, on_delete=models.CASCADE)
     lote = models.ForeignKey(Lote, on_delete=models.CASCADE)
-    quantidade_frascos = models.PositiveIntegerField()
+    quantidade_frascos = models.PositiveIntegerField(default=0)
     data_atualizacao = models.DateTimeField(auto_now=True)
     
     def __str__(self):
@@ -70,21 +84,8 @@ class EstoqueImunobiologico(models.Model):
     
     @property
     def total_doses_disponiveis(self):
-        registros = self.registroabertura_set.filter(
-            data_hora_abertura__gte=timezone.now() - timezone.timedelta(hours=self.lote.tipo_imunobiologico.tempo_validade_apos_aberto)
-        )
-        
-        frascos_abertos = registros.count()
-        doses_utilizadas = sum(r.doses_utilizadas for r in registros)
-        doses_perdidas = sum(r.doses_perdidas for r in registros)
-        
-        doses_disponiveis_frascos_fechados = (self.quantidade_frascos - frascos_abertos) * self.lote.tipo_imunobiologico.doses_por_frasco
-        doses_disponiveis_frascos_abertos = sum([
-            max(0, r.lote.tipo_imunobiologico.doses_por_frasco - r.doses_utilizadas - r.doses_perdidas)
-            for r in registros if r.esta_na_validade
-        ])
-        
-        return doses_disponiveis_frascos_fechados + doses_disponiveis_frascos_abertos
+        """Calcula o total de doses disponíveis baseado na quantidade de frascos e doses por frasco."""
+        return self.quantidade_frascos * self.lote.tipo_imunobiologico.doses_por_frasco
 
 class RegistroAbertura(models.Model):
     estoque = models.ForeignKey(EstoqueImunobiologico, on_delete=models.CASCADE)
