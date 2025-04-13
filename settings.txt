@@ -1,0 +1,39 @@
+# Arquivo de requisitos para o sistema Vacinaí
+# Para instalar todas as dependências, execute:
+# pip install -r settings.txt
+
+# Framework principal
+Django==5.2
+
+# Formulários com estilização Bootstrap
+django-crispy-forms==2.1
+crispy-bootstrap5==0.7
+
+# REST API
+djangorestframework==3.14.0
+
+# Ferramentas úteis
+django-extensions==3.2.3
+django-filter==23.5
+
+# Exportação para PDF
+django-easy-pdf==0.3.0
+reportlab==4.0.8
+WeasyPrint==61.0
+
+# Suporte a validação de dados
+python-dateutil==2.8.2
+
+# Requisições HTTP para integrações
+requests==2.31.0
+
+# Para desenvolvimento
+pytest==7.4.0
+pytest-django==4.8.0
+coverage==7.3.2
+black==23.10.1
+flake8==6.1.0
+
+# Para produção
+gunicorn==21.2.0
+whitenoise==6.6.0
